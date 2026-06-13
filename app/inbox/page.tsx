@@ -92,18 +92,52 @@ export default function InboxPage() {
 
   // ── Fetch list ────────────────────────────────────────────────────────────
 
-  const fetchInbox = useCallback(async (pg = page, q = search) => {
-    setLoading(true);
+  const fetchInbox = useCallback(async (pg = page, q = search, silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const params = new URLSearchParams({ page: pg.toString(), limit: "20" });
       if (q) params.set("search", q);
       const res = await fetch(`/api/inbox?${params}`);
-      if (res.ok) setData(await res.json());
+      if (res.ok) {
+        setData(await res.json());
+      }
     } catch { /* ignore */ }
-    finally { setLoading(false); }
+    finally { if (!silent) setLoading(false); }
   }, [page, search]);
 
-  useEffect(() => { fetchInbox(); }, [fetchInbox]);
+  // Initial fetch
+  useEffect(() => { fetchInbox(); }, [page, search]);
+  
+  // ── SSE for real-time updates ─────────────────────────────────────────────
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (data?.emails?.[0]?.id) params.set("lastId", data.emails[0].id);
+    if (data?.total) params.set("lastCount", data.total.toString());
+    
+    const eventSource = new EventSource(`/api/inbox/stream?${params}`);
+    
+    eventSource.addEventListener("new-email", (e) => {
+      const { email } = JSON.parse(e.data);
+      toast.success(`New email from ${email.fromName || email.fromEmail}`, {
+        description: email.subject,
+        icon: <Mail className="h-4 w-4" />,
+        duration: 5000,
+      });
+      // Refresh the list to show the new email
+      fetchInbox(page, search, true);
+    });
+    
+    eventSource.addEventListener("update", () => {
+      // Counts changed, refresh silently
+      fetchInbox(page, search, true);
+    });
+    
+    eventSource.onerror = () => {
+      // Reconnect handled automatically by EventSource
+    };
+    
+    return () => eventSource.close();
+  }, [data?.emails, data?.total, page, search, fetchInbox]);
 
   // ── Open email ────────────────────────────────────────────────────────────
 
