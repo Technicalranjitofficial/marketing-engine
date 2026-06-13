@@ -5,6 +5,7 @@ import createCampaignWorker from "./processors/campaign.processor";
 import createAutomationWorker from "./processors/automation.processor";
 import createAnalyticsWorker from "./processors/analytics.processor";
 import emailService from "./services/email.service";
+import imapService from "./services/imap.service";
 
 // ============================================
 // MARKETING ENGINE WORKER
@@ -53,6 +54,9 @@ async function main() {
   const analyticsWorker = createAnalyticsWorker();
   console.log("[Worker] ✓ Analytics worker started (concurrency: 20)");
 
+  // Start IMAP IDLE service (reads IMAP_USER / IMAP_PASS env vars)
+  imapService.start();
+
   // Schedule cleanup jobs
   const cleanupJob = new CronJob(
     "0 3 * * *", // Every day at 3 AM
@@ -99,6 +103,7 @@ async function main() {
       analyticsWorker.close(),
     ]);
 
+    await imapService.stop();
     await emailService.close();
     await redis.quit();
 

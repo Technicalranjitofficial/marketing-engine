@@ -90,6 +90,10 @@ services:
       - SMTP_DAILY_LIMIT=${SMTP_DAILY_LIMIT:-100000}
       - DEFAULT_FROM_NAME=${DEFAULT_FROM_NAME:-Marketing Engine}
       - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL:-noreply@kiitconnect.com}
+      - IMAP_HOST=${IMAP_HOST:-mail.kiitconnect.com}
+      - IMAP_PORT=${IMAP_PORT:-993}
+      - IMAP_USER=${IMAP_USER:-}
+      - IMAP_PASS=${IMAP_PASS:-}
     depends_on:
       postgres:
         condition: service_healthy

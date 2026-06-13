@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -16,22 +16,41 @@ import {
   ChevronLeft,
   ChevronRight,
   Zap,
+  Inbox,
 } from "lucide-react";
 
 const navItems = [
-  { href: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/campaigns", icon: Mail, label: "Campaigns" },
-  { href: "/contacts", icon: Users, label: "Contacts" },
-  { href: "/lists", icon: ListTree, label: "Lists" },
-  { href: "/automations", icon: Workflow, label: "Automations" },
-  { href: "/templates", icon: FileText, label: "Templates" },
-  { href: "/analytics", icon: BarChart3, label: "Analytics" },
-  { href: "/settings", icon: Settings, label: "Settings" },
+  { href: "/",           icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/inbox",      icon: Inbox,           label: "Inbox",     badge: "inbox" as const },
+  { href: "/campaigns",  icon: Mail,            label: "Campaigns" },
+  { href: "/contacts",   icon: Users,           label: "Contacts" },
+  { href: "/lists",      icon: ListTree,        label: "Lists" },
+  { href: "/automations",icon: Workflow,        label: "Automations" },
+  { href: "/templates",  icon: FileText,        label: "Templates" },
+  { href: "/analytics",  icon: BarChart3,       label: "Analytics" },
+  { href: "/settings",   icon: Settings,        label: "Settings" },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const [inboxUnread, setInboxUnread] = useState(0);
+
+  // Fetch unread count on mount + every 30 s
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch("/api/inbox?limit=1");
+        if (res.ok) {
+          const d = await res.json();
+          setInboxUnread(d.unreadCount ?? 0);
+        }
+      } catch { /* ignore */ }
+    };
+    load();
+    const t = setInterval(load, 30_000);
+    return () => clearInterval(t);
+  }, []);
 
   return (
     <aside
@@ -63,6 +82,7 @@ export function Sidebar() {
       <nav className="flex flex-col gap-1 p-3">
         {navItems.map((item) => {
           const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+          const unread   = item.badge === "inbox" ? inboxUnread : 0;
           return (
             <Link
               key={item.href}
@@ -75,7 +95,17 @@ export function Sidebar() {
               )}
             >
               <item.icon className={cn("h-5 w-5 flex-shrink-0", isActive && "text-[hsl(var(--primary))]")} />
-              {!collapsed && <span>{item.label}</span>}
+              {!collapsed && (
+                <span className="flex-1">{item.label}</span>
+              )}
+              {!collapsed && unread > 0 && (
+                <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[hsl(var(--primary))] px-1 text-[9px] font-bold text-white">
+                  {unread > 99 ? "99+" : unread}
+                </span>
+              )}
+              {collapsed && unread > 0 && (
+                <span className="absolute left-7 top-1 h-2 w-2 rounded-full bg-[hsl(var(--primary))]" />
+              )}
             </Link>
           );
         })}

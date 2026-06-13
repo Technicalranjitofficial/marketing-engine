@@ -34,6 +34,7 @@ export async function GET() {
             emailAgg,
             recentCampaigns,
             queueAgg,
+            inboxUnread,
           ] = await Promise.all([
             prisma.contact.count(),
             prisma.contact.count({ where: { status: "ACTIVE" } }),
@@ -68,6 +69,8 @@ export async function GET() {
             }),
             // Active email jobs (SENDING status)
             prisma.email.count({ where: { status: "SENDING" } }),
+            // Unread inbound emails
+            prisma.inboundEmail.count({ where: { isRead: false } }),
           ]);
 
           const sum = emailAgg._sum;
@@ -103,6 +106,7 @@ export async function GET() {
               clickRate: c.totalSent > 0 ? ((c.totalClicked / c.totalSent) * 100).toFixed(1) : "0",
             })),
             activeEmailJobs: queueAgg,
+            inboxUnread,
           });
         } catch (err) {
           // Don't crash the stream on a DB error — just skip this tick

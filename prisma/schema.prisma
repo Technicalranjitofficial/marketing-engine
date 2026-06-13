@@ -337,6 +337,30 @@ enum ABTestStatus {
 }
 
 // ============================================
+// INBOUND EMAIL (IMAP IDLE inbox)
+// ============================================
+
+model InboundEmail {
+  id         String   @id @default(cuid())
+  messageId  String?  @unique
+  subject    String   @default("")
+  fromEmail  String
+  fromName   String?
+  toEmail    String?
+  htmlBody   String?  @db.Text
+  textBody   String?  @db.Text
+  isRead     Boolean  @default(false)
+  // Optional back-links
+  campaignId String?
+  contactId  String?
+  receivedAt DateTime @default(now())
+
+  @@index([isRead])
+  @@index([receivedAt])
+  @@index([fromEmail])
+}
+
+// ============================================
 // AUTOMATION
 // ============================================
 

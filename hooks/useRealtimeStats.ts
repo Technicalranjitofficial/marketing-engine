@@ -36,6 +36,7 @@ export interface StreamStats {
     clickRate: string;
   }>;
   activeEmailJobs: number;
+  inboxUnread: number;
 }
 
 type ConnectionState = "connecting" | "live" | "reconnecting" | "error";
