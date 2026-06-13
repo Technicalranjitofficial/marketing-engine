@@ -126,6 +126,7 @@ export default function KIITUsersPage() {
           id: t.id,
           name: t.name,
           category: "Custom",
+          description: t.description || "Custom template",
         }));
         allTemplates.push(...mapped);
       }
