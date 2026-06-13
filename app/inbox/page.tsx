@@ -259,7 +259,7 @@ export default function InboxPage() {
           </div>
           <div className="flex items-center gap-2">
             <Button
-              variant="default"
+              variant="primary"
               size="sm"
               leftIcon={<PenSquare className="h-3.5 w-3.5" />}
               onClick={() => setShowCompose(true)}
