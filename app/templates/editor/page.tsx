@@ -11,7 +11,7 @@ import {
   ChevronUp, ChevronDown, Palette, AlignLeft, AlignCenter, AlignRight,
   Link, Bold, Layers, Settings, Undo2, Redo2, Smartphone, Monitor,
   Facebook, Twitter, Linkedin, Instagram, Mail, Globe,
-  Sparkles
+  Sparkles, FileCode, Upload, Info, X
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -687,6 +687,9 @@ export default function TemplateEditorPage() {
   const [templateName, setTemplateName] = useState("Untitled Template");
   const [showPreview, setShowPreview] = useState(false);
   const [showCode, setShowCode] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const [showVariableHelp, setShowVariableHelp] = useState(false);
+  const [importHtml, setImportHtml] = useState("");
   const [saving, setSaving] = useState(false);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [mobileTab, setMobileTab] = useState<"blocks" | "canvas" | "properties">("canvas");
@@ -832,6 +835,58 @@ export default function TemplateEditorPage() {
     }
   };
 
+  const handleImportHtml = () => {
+    if (!importHtml.trim()) {
+      toast.error("Please paste your HTML code");
+      return;
+    }
+    // Create a single HTML block with the imported content
+    const newBlock: Block = {
+      id: genId(),
+      type: "text",
+      content: "[Imported HTML - View in Code/Preview]",
+      styles: DEFAULT_STYLES.text,
+    };
+    setBlocks([newBlock]);
+    setShowImport(false);
+    setImportHtml("");
+    toast.success("HTML imported! Use Preview to see it.");
+  };
+
+  const handleSaveRawHtml = async () => {
+    if (!templateName.trim()) {
+      toast.error("Please enter a template name");
+      return;
+    }
+    if (!importHtml.trim()) {
+      toast.error("Please paste your HTML code");
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch("/api/templates/custom", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: templateName,
+          html: importHtml,
+          blocks: JSON.stringify([{ type: "raw", content: "Imported HTML template" }]),
+        }),
+      });
+      if (res.ok) {
+        toast.success("Template saved!");
+        router.push("/templates");
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Failed to save");
+      }
+    } catch {
+      toast.error("Failed to save template");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const generatedHtml = generateEmailHtml(blocks, templateName);
   const categories = [...new Set(BLOCK_TYPES.map(b => b.category))];
 
@@ -878,6 +933,12 @@ export default function TemplateEditorPage() {
             </button>
           </div>
 
+          <Button variant="outline" size="sm" onClick={() => setShowImport(true)} className="hidden md:flex">
+            <Upload className="h-4 w-4 mr-1" /> Import
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setShowVariableHelp(true)} className="hidden lg:flex">
+            <Info className="h-4 w-4 mr-1" /> Variables
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setShowCode(true)} className="hidden md:flex">
             <Code className="h-4 w-4 mr-1" /> Code
           </Button>
@@ -1124,6 +1185,252 @@ export default function TemplateEditorPage() {
             <pre className="flex-1 overflow-auto p-4 m-0 text-xs font-mono text-slate-400 bg-slate-900">
               {generatedHtml}
             </pre>
+          </div>
+        </div>
+      )}
+
+      {/* Import HTML Modal */}
+      {showImport && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
+          <div className="w-full max-w-4xl max-h-[90vh] bg-[hsl(var(--card))] rounded-xl flex flex-col overflow-hidden">
+            <div className="p-4 border-b border-[hsl(var(--border))] flex items-center justify-between">
+              <div>
+                <h2 className="font-semibold text-lg">Import HTML Template</h2>
+                <p className="text-sm text-slate-400">Paste your custom HTML email template below</p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setShowImport(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="p-4 border-b border-[hsl(var(--border))] bg-slate-800/30">
+              <div className="flex items-start gap-3 text-sm">
+                <Info className="h-5 w-5 text-cyan-400 flex-shrink-0 mt-0.5" />
+                <div className="space-y-2">
+                  <p className="text-slate-300">Use these variables in your HTML for personalization:</p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+                    <code className="bg-slate-900 px-2 py-1 rounded text-cyan-400">{"{{firstName}}"}</code>
+                    <code className="bg-slate-900 px-2 py-1 rounded text-cyan-400">{"{{lastName}}"}</code>
+                    <code className="bg-slate-900 px-2 py-1 rounded text-cyan-400">{"{{email}}"}</code>
+                    <code className="bg-slate-900 px-2 py-1 rounded text-cyan-400">{"{{ctaUrl}}"}</code>
+                    <code className="bg-slate-900 px-2 py-1 rounded text-cyan-400">{"{{ctaText}}"}</code>
+                    <code className="bg-slate-900 px-2 py-1 rounded text-cyan-400">{"{{unsubscribeUrl}}"}</code>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 p-4 overflow-hidden flex flex-col">
+              <label className="text-sm text-slate-400 mb-2">Paste your HTML code:</label>
+              <textarea
+                value={importHtml}
+                onChange={(e) => setImportHtml(e.target.value)}
+                className="flex-1 w-full bg-slate-900 border border-slate-700 rounded-lg p-4 text-sm font-mono text-slate-300 resize-none focus:outline-none focus:border-cyan-500"
+                placeholder={`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Your Email</title>
+</head>
+<body style="margin:0;padding:0;background:#080E1E;">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center" style="padding:40px 20px;">
+        <h1 style="color:#ffffff;">Hello {{firstName}}!</h1>
+        <p style="color:#d1d5db;">Your personalized content here...</p>
+        <a href="{{ctaUrl}}" style="background:#06D6FF;color:#080E1E;padding:14px 32px;border-radius:8px;text-decoration:none;display:inline-block;">
+          {{ctaText}}
+        </a>
+        <p style="color:#64748b;font-size:12px;margin-top:32px;">
+          <a href="{{unsubscribeUrl}}" style="color:#64748b;">Unsubscribe</a>
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`}
+              />
+            </div>
+
+            <div className="p-4 border-t border-[hsl(var(--border))] flex items-center justify-between gap-4">
+              <Button variant="outline" onClick={() => setShowVariableHelp(true)}>
+                <Info className="h-4 w-4 mr-1" /> Variable Guide
+              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setShowImport(false)}>Cancel</Button>
+                <Button onClick={handleSaveRawHtml} isLoading={saving}>
+                  <Save className="h-4 w-4 mr-1" /> Save Template
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Variable Help Modal */}
+      {showVariableHelp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
+          <div className="w-full max-w-2xl max-h-[90vh] bg-[hsl(var(--card))] rounded-xl flex flex-col overflow-hidden">
+            <div className="p-4 border-b border-[hsl(var(--border))] flex items-center justify-between">
+              <div>
+                <h2 className="font-semibold text-lg">Template Variables Guide</h2>
+                <p className="text-sm text-slate-400">Use these placeholders in your HTML templates</p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setShowVariableHelp(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="flex-1 overflow-auto p-4 space-y-6">
+              {/* Contact Variables */}
+              <div>
+                <h3 className="font-semibold text-cyan-400 mb-3 flex items-center gap-2">
+                  <Mail className="h-4 w-4" /> Contact Variables
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                    <div>
+                      <code className="text-cyan-400 font-mono">{"{{firstName}}"}</code>
+                      <p className="text-xs text-slate-400 mt-1">Contact's first name</p>
+                    </div>
+                    <span className="text-xs text-slate-500">e.g., "Ranjit"</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                    <div>
+                      <code className="text-cyan-400 font-mono">{"{{lastName}}"}</code>
+                      <p className="text-xs text-slate-400 mt-1">Contact's last name</p>
+                    </div>
+                    <span className="text-xs text-slate-500">e.g., "Kumar"</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                    <div>
+                      <code className="text-cyan-400 font-mono">{"{{email}}"}</code>
+                      <p className="text-xs text-slate-400 mt-1">Contact's email address</p>
+                    </div>
+                    <span className="text-xs text-slate-500">e.g., "user@kiit.ac.in"</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* CTA Variables */}
+              <div>
+                <h3 className="font-semibold text-purple-400 mb-3 flex items-center gap-2">
+                  <Link className="h-4 w-4" /> Call-to-Action Variables
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                    <div>
+                      <code className="text-purple-400 font-mono">{"{{ctaUrl}}"}</code>
+                      <p className="text-xs text-slate-400 mt-1">Button/link destination URL</p>
+                    </div>
+                    <span className="text-xs text-slate-500">e.g., "https://kiitconnect.com/signup"</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                    <div>
+                      <code className="text-purple-400 font-mono">{"{{ctaText}}"}</code>
+                      <p className="text-xs text-slate-400 mt-1">Button/link text</p>
+                    </div>
+                    <span className="text-xs text-slate-500">e.g., "Get Started →"</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                    <div>
+                      <code className="text-purple-400 font-mono">{"{{headline}}"}</code>
+                      <p className="text-xs text-slate-400 mt-1">Optional headline text</p>
+                    </div>
+                    <span className="text-xs text-slate-500">e.g., "Special Offer!"</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* System Variables */}
+              <div>
+                <h3 className="font-semibold text-emerald-400 mb-3 flex items-center gap-2">
+                  <Settings className="h-4 w-4" /> System Variables (Auto-generated)
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                    <div>
+                      <code className="text-emerald-400 font-mono">{"{{unsubscribeUrl}}"}</code>
+                      <p className="text-xs text-slate-400 mt-1">Unique unsubscribe link (required for compliance)</p>
+                    </div>
+                    <span className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded">Auto</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                    <div>
+                      <code className="text-emerald-400 font-mono">{"{{trackingPixel}}"}</code>
+                      <p className="text-xs text-slate-400 mt-1">Open tracking pixel (auto-injected)</p>
+                    </div>
+                    <span className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded">Auto</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Example Template */}
+              <div>
+                <h3 className="font-semibold text-amber-400 mb-3 flex items-center gap-2">
+                  <FileCode className="h-4 w-4" /> Example HTML Template
+                </h3>
+                <pre className="bg-slate-900 p-4 rounded-lg text-xs font-mono text-slate-400 overflow-auto">
+{`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Your Email Subject</title>
+</head>
+<body style="margin:0;padding:0;background:#080E1E;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#080E1E;">
+    <tr>
+      <td align="center" style="padding:40px 20px;">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+          <tr>
+            <td style="background:#080E1E;padding:32px;border-radius:16px;border:1px solid #1e293b;">
+              
+              <!-- Logo -->
+              <img src="YOUR_LOGO_URL" alt="Logo" width="120" style="display:block;margin:0 auto 24px;">
+              
+              <!-- Heading -->
+              <h1 style="color:#ffffff;font-size:28px;text-align:center;margin:0 0 16px;">
+                Hello {{firstName}}!
+              </h1>
+              
+              <!-- Body Text -->
+              <p style="color:#d1d5db;font-size:16px;line-height:1.6;text-align:center;margin:0 0 24px;">
+                Welcome to KIITConnect. We're excited to have you join our community.
+              </p>
+              
+              <!-- CTA Button -->
+              <div style="text-align:center;margin:24px 0;">
+                <a href="{{ctaUrl}}" style="background:#06D6FF;color:#080E1E;font-size:14px;font-weight:700;padding:14px 32px;border-radius:8px;text-decoration:none;display:inline-block;">
+                  {{ctaText}}
+                </a>
+              </div>
+              
+              <!-- Footer -->
+              <div style="border-top:1px solid #1e293b;padding-top:24px;margin-top:32px;text-align:center;">
+                <p style="color:#64748b;font-size:12px;margin:0;">
+                  © 2024 KIITConnect. All rights reserved.
+                </p>
+                <p style="margin:8px 0 0;">
+                  <a href="{{unsubscribeUrl}}" style="color:#64748b;font-size:11px;">Unsubscribe</a>
+                </p>
+              </div>
+              
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`}
+                </pre>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-[hsl(var(--border))] flex justify-end">
+              <Button onClick={() => setShowVariableHelp(false)}>Got it!</Button>
+            </div>
           </div>
         </div>
       )}
