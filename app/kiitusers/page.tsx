@@ -54,12 +54,22 @@ const GROUPS = [
   { value: "free",    label: "Free Users",    icon: UserX,     color: "text-slate-400"  },
 ] as const;
 
+const BATCHES = [
+  { value: "",   label: "All Batches" },
+  { value: "21", label: "2021" },
+  { value: "22", label: "2022" },
+  { value: "23", label: "2023" },
+  { value: "24", label: "2024" },
+  { value: "25", label: "2025" },
+] as const;
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function KIITUsersPage() {
   const [data, setData]             = useState<UsersResponse | null>(null);
   const [loading, setLoading]       = useState(true);
   const [group, setGroup]           = useState<"all" | "premium" | "free">("all");
+  const [batch, setBatch]           = useState(""); // "21", "22", "23", "24", "25" or "" for all
   const [page, setPage]             = useState(1);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch]         = useState("");
@@ -81,17 +91,18 @@ export default function KIITUsersPage() {
 
   // ── Fetch users ─────────────────────────────────────────────────────────────
 
-  const fetchUsers = useCallback(async (pg = page, g = group, q = search) => {
+  const fetchUsers = useCallback(async (pg = page, g = group, q = search, b = batch) => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ group: g, page: pg.toString(), limit: "50" });
       if (q) params.set("search", q);
+      if (b) params.set("batch", b);
       const res = await fetch(`/api/kiitusers?${params}`);
       if (res.ok) setData(await res.json());
       else toast.error("Failed to load users");
     } catch { toast.error("Network error"); }
     finally { setLoading(false); }
-  }, [page, group, search]);
+  }, [page, group, search, batch]);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
@@ -195,19 +206,25 @@ export default function KIITUsersPage() {
     setPage(1);
     setSearch("");
     setSearchInput("");
-    fetchUsers(1, g, "");
+    fetchUsers(1, g, "", batch);
+  };
+
+  const handleBatchChange = (b: string) => {
+    setBatch(b);
+    setPage(1);
+    fetchUsers(1, group, search, b);
   };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setPage(1);
     setSearch(searchInput);
-    fetchUsers(1, group, searchInput);
+    fetchUsers(1, group, searchInput, batch);
   };
 
   const goPage = (pg: number) => {
     setPage(pg);
-    fetchUsers(pg, group, search);
+    fetchUsers(pg, group, search, batch);
   };
 
   const currentPageAllSelected =
@@ -251,7 +268,7 @@ export default function KIITUsersPage() {
           </div>
 
           {/* Group tabs */}
-          <div className="mb-6 flex gap-2">
+          <div className="mb-4 flex gap-2">
             {GROUPS.map((g) => (
               <button
                 key={g.value}
@@ -264,6 +281,24 @@ export default function KIITUsersPage() {
               >
                 <g.icon className={`h-4 w-4 ${g.color}`} />
                 {g.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Batch filter */}
+          <div className="mb-6 flex items-center gap-2">
+            <span className="text-xs text-[hsl(var(--muted-foreground))] mr-1">Batch:</span>
+            {BATCHES.map((b) => (
+              <button
+                key={b.value}
+                onClick={() => handleBatchChange(b.value)}
+                className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
+                  batch === b.value
+                    ? "bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))] ring-1 ring-[hsl(var(--secondary)/0.5)]"
+                    : "bg-[hsl(var(--accent)/0.5)] text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--foreground))]"
+                }`}
+              >
+                {b.label}
               </button>
             ))}
           </div>

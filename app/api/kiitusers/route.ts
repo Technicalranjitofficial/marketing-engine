@@ -34,21 +34,45 @@ export async function GET(req: NextRequest) {
   const limit  = Math.min(100, parseInt(searchParams.get("limit") || "50"));
   const page   = Math.max(1,   parseInt(searchParams.get("page")  || "1"));
   const search = searchParams.get("search")?.toLowerCase().trim() || "";
+  const batch  = searchParams.get("batch") || ""; // e.g. "21", "22", "23", "24", "25"
 
   const endpoint = GROUPS[group];
   if (!endpoint) return NextResponse.json({ error: "Invalid group" }, { status: 400 });
 
+  // Filter helper — checks search + batch
+  const filterUser = (u: ReturnType<typeof normalise>) => {
+    if (search && !u.name.toLowerCase().includes(search) && !u.email.toLowerCase().includes(search)) {
+      return false;
+    }
+    if (batch && !u.email.startsWith(batch)) {
+      return false;
+    }
+    return true;
+  };
+
   try {
     if (group === "all") {
-      // admin/users supports limit param
-      const url = `${KIIT_API}/admin/users?limit=${limit}&skip=${(page - 1) * limit}`;
+      // admin/users supports limit param — but if batch filter is set we need to fetch more and filter
+      const fetchLimit = batch ? 5000 : limit; // fetch all if batch filter active
+      const skip = batch ? 0 : (page - 1) * limit;
+      const url = `${KIIT_API}/admin/users?limit=${fetchLimit}&skip=${skip}`;
       const raw = await fetch(url, { cache: "no-store" }).then((r) => r.json());
-      let users: ReturnType<typeof normalise>[] = (raw.users || []).map(normalise);
-      if (search) {
-        users = users.filter(
-          (u) => u.name.toLowerCase().includes(search) || u.email.toLowerCase().includes(search)
-        );
+      let users: ReturnType<typeof normalise>[] = (raw.users || []).map(normalise).filter(filterUser);
+      
+      if (batch) {
+        // When filtering by batch, we paginate the filtered result
+        const total = users.length;
+        const start = (page - 1) * limit;
+        return NextResponse.json({
+          users: users.slice(start, start + limit),
+          total,
+          page,
+          pages: Math.ceil(total / limit),
+          group,
+          batch,
+        });
       }
+      
       return NextResponse.json({
         users,
         total: raw.total || 0,
@@ -64,12 +88,7 @@ export async function GET(req: NextRequest) {
         Array.isArray(raw) ? raw : raw.user || []
       ).map(normalise);
 
-      let filtered = allUsers;
-      if (search) {
-        filtered = allUsers.filter(
-          (u) => u.name.toLowerCase().includes(search) || u.email.toLowerCase().includes(search)
-        );
-      }
+      const filtered = allUsers.filter(filterUser);
       const total = filtered.length;
       const start = (page - 1) * limit;
       return NextResponse.json({
@@ -78,6 +97,7 @@ export async function GET(req: NextRequest) {
         page,
         pages : Math.ceil(total / limit),
         group,
+        batch: batch || undefined,
       });
     }
   } catch (err) {
