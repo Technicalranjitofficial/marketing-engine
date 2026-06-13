@@ -72,7 +72,9 @@ export async function POST(req: NextRequest) {
       try {
         const firstName = (user.name || "").split(/[\s_]+/)[0].replace(/^\d+/, "").trim() || "Student";
         const email     = user.email?.toLowerCase().trim();
-        if (!email || !email.includes("@")) { errors.push(`bad email: ${user.email}`); continue; }
+        // Strict RFC-5321 local-part: only alphanum, dots, hyphens, underscores, plus — no commas
+        const validEmail = /^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$/.test(email ?? "");
+        if (!email || !validEmail) { errors.push(`bad email: ${user.email}`); continue; }
 
         // Upsert contact so tracking + unsubscribe work
         const contact = await prisma.contact.upsert({
