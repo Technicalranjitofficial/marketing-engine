@@ -133,38 +133,38 @@ export const welcomeTemplate: EmailTemplate = {
   <td class="kc-cell" bgcolor="#080E1E" style="padding:32px 30px;background-color:#080E1E !important;">
     <p style="margin:0 0 24px;color:#A8C8E0;font-size:15px;line-height:1.7;">
       Hey <strong style="color:#C8DCF0;">${v.firstName || "there"}</strong>,<br/><br/>
-      We're excited to have you on KIIT Connect! You now have access to free PYQs, class notes, the SGPA calculator, faculty reviews, AI chatbot, and a growing community of KIITians.
+      Welcome to KIIT Connect — the #1 platform for KIIT students! Get unlimited access to PYQs, notes, faculty reviews, AI chatbot, and more with our <strong style="color:#9333EA;">Premium subscription at just ₹99/semester</strong>.
     </p>
 
     <!-- Feature grid -->
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
       <tr>
-        <td width="48%" style="padding:16px;background:rgba(6,214,255,0.05);border:1px solid rgba(6,214,255,0.12);border-radius:10px;vertical-align:top;">
+        <td bgcolor="#080E1E" width="48%" class="kc-cell" style="padding:16px;background-color:#080E1E !important;border:1px solid rgba(6,214,255,0.12);border-radius:10px;vertical-align:top;">
           <div style="font-size:22px;margin-bottom:8px;">📚</div>
-          <div style="color:#06D6FF;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Free Resources</div>
-          <div style="color:#7AAFC8;font-size:13px;">PYQs, notes, books — all free, forever.</div>
+          <div style="color:#06D6FF;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Unlimited PYQs</div>
+          <div style="color:#7AAFC8;font-size:13px;">All branches, all semesters — verified solutions.</div>
         </td>
         <td width="4%"></td>
-        <td width="48%" style="padding:16px;background:rgba(147,51,234,0.05);border:1px solid rgba(147,51,234,0.15);border-radius:10px;vertical-align:top;">
-          <div style="font-size:22px;margin-bottom:8px;">🤖</div>
-          <div style="color:#9333EA;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">AI Chatbot</div>
-          <div style="color:#7AAFC8;font-size:13px;">KIIT-specific AI to answer all your questions.</div>
+        <td bgcolor="#080E1E" width="48%" class="kc-cell" style="padding:16px;background-color:#080E1E !important;border:1px solid rgba(147,51,234,0.15);border-radius:10px;vertical-align:top;">
+          <div style="font-size:22px;margin-bottom:8px;">📝</div>
+          <div style="color:#9333EA;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Premium Notes</div>
+          <div style="color:#7AAFC8;font-size:13px;">Curated notes from top rankers.</div>
         </td>
       </tr>
     </table>
 
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;">
       <tr>
-        <td width="48%" style="padding:16px;background:rgba(20,184,166,0.05);border:1px solid rgba(20,184,166,0.15);border-radius:10px;vertical-align:top;">
-          <div style="font-size:22px;margin-bottom:8px;">🔢</div>
-          <div style="color:#14B8A6;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">SGPA Calculator</div>
-          <div style="color:#7AAFC8;font-size:13px;">Calculate your SGPA &amp; CGPA instantly.</div>
+        <td bgcolor="#080E1E" width="48%" class="kc-cell" style="padding:16px;background-color:#080E1E !important;border:1px solid rgba(20,184,166,0.15);border-radius:10px;vertical-align:top;">
+          <div style="font-size:22px;margin-bottom:8px;">👨‍🏫</div>
+          <div style="color:#14B8A6;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Faculty Reviews</div>
+          <div style="color:#7AAFC8;font-size:13px;">Know your faculty before choosing sections.</div>
         </td>
         <td width="4%"></td>
-        <td width="48%" style="padding:16px;background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.15);border-radius:10px;vertical-align:top;">
+        <td bgcolor="#080E1E" width="48%" class="kc-cell" style="padding:16px;background-color:#080E1E !important;border:1px solid rgba(245,158,11,0.15);border-radius:10px;vertical-align:top;">
           <div style="font-size:22px;margin-bottom:8px;">🏫</div>
           <div style="color:#F59E0B;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Section Swap</div>
-          <div style="color:#7AAFC8;font-size:13px;">Swap your section with fellow KIITians easily.</div>
+          <div style="color:#7AAFC8;font-size:13px;">Swap your section with fellow KIITians.</div>
         </td>
       </tr>
     </table>
@@ -321,10 +321,10 @@ export const promoTemplate: EmailTemplate = {
     <!-- Offer box -->
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
       <tr>
-        <td style="padding:28px;background:rgba(6,214,255,0.05);border:1px solid rgba(6,214,255,0.20);border-radius:12px;text-align:center;box-shadow:0 0 40px rgba(6,214,255,0.05);">
-          <div style="color:#7AAFC8;font-size:13px;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;">Offer details</div>
-          <div style="color:#06D6FF;font-size:36px;font-weight:900;margin:8px 0;">${v.offerText || "FREE Premium Access"}</div>
-          <div style="color:#A8C8E0;font-size:13px;">${v.offerSubtext || "No credit card required. Just your KIIT email."}</div>
+        <td bgcolor="#080E1E" class="kc-cell" style="padding:28px;background-color:#080E1E !important;border:1px solid rgba(6,214,255,0.20);border-radius:12px;text-align:center;box-shadow:0 0 40px rgba(6,214,255,0.05);">
+          <div style="color:#7AAFC8;font-size:13px;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;">Premium Offer</div>
+          <div style="color:#06D6FF;font-size:36px;font-weight:900;margin:8px 0;">${v.offerText || "₹99/semester"}</div>
+          <div style="color:#A8C8E0;font-size:13px;">${v.offerSubtext || "Unlock unlimited PYQs, notes, faculty reviews & more."}</div>
         </td>
       </tr>
     </table>
@@ -412,12 +412,12 @@ export const eventTemplate: EmailTemplate = {
     <!-- Event details -->
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
       <tr>
-        <td width="48%" style="padding:18px;background:rgba(20,184,166,0.05);border:1px solid rgba(20,184,166,0.15);border-radius:10px;text-align:center;vertical-align:top;">
+        <td bgcolor="#080E1E" width="48%" class="kc-cell" style="padding:18px;background-color:#080E1E !important;border:1px solid rgba(20,184,166,0.15);border-radius:10px;text-align:center;vertical-align:top;">
           <div style="color:#14B8A6;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">📅 Date</div>
           <div style="color:#C8DCF0;font-size:15px;font-weight:700;">${v.eventDate || "Coming Soon"}</div>
         </td>
         <td width="4%"></td>
-        <td width="48%" style="padding:18px;background:rgba(20,184,166,0.05);border:1px solid rgba(20,184,166,0.15);border-radius:10px;text-align:center;vertical-align:top;">
+        <td bgcolor="#080E1E" width="48%" class="kc-cell" style="padding:18px;background-color:#080E1E !important;border:1px solid rgba(20,184,166,0.15);border-radius:10px;text-align:center;vertical-align:top;">
           <div style="color:#14B8A6;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">📍 Where</div>
           <div style="color:#C8DCF0;font-size:15px;font-weight:700;">${v.eventLocation || "Online / KIIT Campus"}</div>
         </td>
@@ -459,7 +459,7 @@ export const transactionalTemplate: EmailTemplate = {
     <!-- OTP / Code box -->
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
       <tr>
-        <td style="padding:24px;background:rgba(6,214,255,0.06);border:1px solid rgba(6,214,255,0.25);border-radius:12px;text-align:center;">
+        <td bgcolor="#080E1E" class="kc-cell" style="padding:24px;background-color:#080E1E !important;border:1px solid rgba(6,214,255,0.25);border-radius:12px;text-align:center;">
           <div style="color:#7AAFC8;font-size:12px;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">Your Code</div>
           <div style="color:#06D6FF;font-size:36px;font-weight:900;letter-spacing:8px;font-family:'Courier New',monospace;">${v.otpCode || "------"}</div>
           <div style="color:#4A6580;font-size:12px;margin-top:8px;">Expires in 10 minutes</div>
@@ -470,7 +470,7 @@ export const transactionalTemplate: EmailTemplate = {
     <!-- Security notice -->
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
       <tr>
-        <td style="padding:14px 16px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.15);border-left:3px solid #F59E0B;border-radius:8px;">
+        <td bgcolor="#080E1E" class="kc-cell" style="padding:14px 16px;background-color:#080E1E !important;border:1px solid rgba(245,158,11,0.15);border-left:3px solid #F59E0B;border-radius:8px;">
           <p style="margin:0;color:#A8C8E0;font-size:13px;line-height:1.6;">⚠️ If you did not request this, please ignore this email. Your account remains secure.</p>
         </td>
       </tr>
