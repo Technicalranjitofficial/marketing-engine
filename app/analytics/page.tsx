@@ -1,44 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Sidebar, Header } from "@/components/layout/Sidebar";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Badge } from "@/components/ui/Table";
-import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/Stats";
-import { RefreshCw, MailOpen, MousePointerClick, Mail, Users, AlertCircle, TrendingUp } from "lucide-react";
-
-interface AnalyticsData {
-  overview: {
-    contacts: { total: number; active: number };
-    campaigns: { total: number; sent: number };
-    lists: number;
-    automations: { total: number; active: number };
-  };
-  emailStats: {
-    totalSent: number;
-    totalDelivered: number;
-    totalOpened: number;
-    totalClicked: number;
-    totalBounced: number;
-    totalComplaints: number;
-    totalUnsubscribed: number;
-    openRate: string;
-    clickRate: string;
-    bounceRate: string;
-    deliveryRate: string;
-  };
-  recentCampaigns: Array<{
-    id: string;
-    name: string;
-    sentAt: string | null;
-    totalSent: number;
-    totalDelivered: number;
-    totalOpened: number;
-    totalClicked: number;
-    totalBounced: number;
-  }>;
-}
+import { LiveBadge } from "@/components/ui/LiveBadge";
+import { useRealtimeStats } from "@/hooks/useRealtimeStats";
+import { MailOpen, MousePointerClick, Mail, Users, AlertCircle, TrendingUp } from "lucide-react";
 
 function StatBlock({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
   return (
@@ -51,26 +19,14 @@ function StatBlock({ label, value, sub, color }: { label: string; value: string;
 }
 
 export default function AnalyticsPage() {
-  const [data, setData] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/stats");
-      if (res.ok) setData(await res.json());
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchData(); }, []);
+  const { data, state, lastUpdate } = useRealtimeStats();
+  const loading = !data;
 
   const e = data?.emailStats;
   const openRate = parseFloat(e?.openRate ?? "0");
   const clickRate = parseFloat(e?.clickRate ?? "0");
   const bounceRate = parseFloat(e?.bounceRate ?? "0");
-  const deliveryRate = parseFloat(e?.deliveryRate ?? "100");
+  const deliveryRate = parseFloat(e?.deliveryRate ?? "0");
 
   return (
     <div className="flex min-h-screen">
@@ -79,12 +35,12 @@ export default function AnalyticsPage() {
         <div className="container-wide py-8">
           <div className="flex items-start justify-between">
             <Header title="Analytics" description="Detailed performance metrics for your email campaigns" />
-            <Button variant="ghost" size="sm" leftIcon={<RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />} onClick={fetchData} className="mt-1">Refresh</Button>
+            <div className="mt-2"><LiveBadge state={state} lastUpdate={lastUpdate} /></div>
           </div>
 
           {loading ? (
             <div className="flex items-center justify-center py-24 text-[hsl(var(--muted-foreground))]">
-              <RefreshCw className="h-5 w-5 animate-spin mr-2" /> Loading analytics…
+              Connecting to live data…
             </div>
           ) : (
             <>
@@ -228,8 +184,6 @@ export default function AnalyticsPage() {
                       </TableHeader>
                       <TableBody>
                         {data.recentCampaigns.map((c) => {
-                          const or = c.totalSent > 0 ? ((c.totalOpened / c.totalSent) * 100).toFixed(1) : "0.0";
-                          const cr = c.totalSent > 0 ? ((c.totalClicked / c.totalSent) * 100).toFixed(1) : "0.0";
                           const dr = c.totalSent > 0 ? ((c.totalDelivered / c.totalSent) * 100).toFixed(1) : "0.0";
                           const br = c.totalSent > 0 ? ((c.totalBounced / c.totalSent) * 100).toFixed(1) : "0.0";
                           return (
@@ -240,8 +194,8 @@ export default function AnalyticsPage() {
                               </TableCell>
                               <TableCell className="text-right tabular-nums">{c.totalSent.toLocaleString()}</TableCell>
                               <TableCell className="text-right"><Badge variant="success">{dr}%</Badge></TableCell>
-                              <TableCell className="text-right"><Badge variant="info">{or}%</Badge></TableCell>
-                              <TableCell className="text-right"><Badge variant="success">{cr}%</Badge></TableCell>
+                              <TableCell className="text-right"><Badge variant="info">{c.openRate}%</Badge></TableCell>
+                              <TableCell className="text-right"><Badge variant="success">{c.clickRate}%</Badge></TableCell>
                               <TableCell className="text-right"><Badge variant={parseFloat(br) > 2 ? "danger" : "default"}>{br}%</Badge></TableCell>
                             </TableRow>
                           );
