@@ -1,4 +1,3 @@
-import IORedis from "ioredis";
 import { Queue } from "bullmq";
 
 // ============================================
@@ -9,27 +8,19 @@ import { Queue } from "bullmq";
 const redisConfig = {
   host: process.env.REDIS_HOST || "localhost",
   port: parseInt(process.env.REDIS_PORT || "6379"),
-  password: process.env.REDIS_PASSWORD,
+  password: process.env.REDIS_PASSWORD || undefined,
   maxRetriesPerRequest: null,
 };
 
 // Lazy-initialized connections
-let _redis: IORedis | null = null;
 let _campaignQueue: Queue | null = null;
 let _automationQueue: Queue | null = null;
 let _analyticsQueue: Queue | null = null;
 
-function getRedis() {
-  if (!_redis) {
-    _redis = new IORedis(redisConfig);
-  }
-  return _redis;
-}
-
 function getCampaignQueue() {
   if (!_campaignQueue) {
     _campaignQueue = new Queue("campaign-queue", {
-      connection: new IORedis(redisConfig),
+      connection: redisConfig,
     });
   }
   return _campaignQueue;
@@ -38,7 +29,7 @@ function getCampaignQueue() {
 function getAutomationQueue() {
   if (!_automationQueue) {
     _automationQueue = new Queue("automation-queue", {
-      connection: new IORedis(redisConfig),
+      connection: redisConfig,
     });
   }
   return _automationQueue;
@@ -47,7 +38,7 @@ function getAutomationQueue() {
 function getAnalyticsQueue() {
   if (!_analyticsQueue) {
     _analyticsQueue = new Queue("analytics-queue", {
-      connection: new IORedis(redisConfig),
+      connection: redisConfig,
     });
   }
   return _analyticsQueue;
@@ -94,7 +85,7 @@ export async function queueTrackingEvent(
 
 export async function getQueueStats() {
   const queues = [
-    { name: "email-queue", queue: new Queue("email-queue", { connection: new IORedis(redisConfig) }) },
+    { name: "email-queue", queue: new Queue("email-queue", { connection: redisConfig }) },
     { name: "campaign-queue", queue: getCampaignQueue() },
     { name: "automation-queue", queue: getAutomationQueue() },
     { name: "analytics-queue", queue: getAnalyticsQueue() },
@@ -117,8 +108,9 @@ export async function getQueueStats() {
 
 export async function isRedisConnected(): Promise<boolean> {
   try {
-    const redis = getRedis();
-    await redis.ping();
+    const queue = getCampaignQueue();
+    const client = await queue.client;
+    await client.ping();
     return true;
   } catch {
     return false;
