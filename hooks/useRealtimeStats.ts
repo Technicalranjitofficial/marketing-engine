@@ -7,6 +7,7 @@ export interface StreamStats {
   overview: {
     contacts: { total: number; active: number };
     campaigns: { total: number; sent: number };
+    lists: number;
   };
   emailStats: {
     totalSent: number;

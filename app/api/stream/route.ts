@@ -82,6 +82,7 @@ export async function GET() {
             overview: {
               contacts: { total: totalContacts, active: activeContacts },
               campaigns: { total: totalCampaigns, sent: sentCampaigns },
+              lists: 0, // not queried in stream for perf — use /api/stats for full count
             },
             emailStats: {
               totalSent,
