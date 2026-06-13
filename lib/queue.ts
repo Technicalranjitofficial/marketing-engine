@@ -13,9 +13,17 @@ const redisConfig = {
 };
 
 // Lazy-initialized connections
+let _emailQueue: Queue | null = null;
 let _campaignQueue: Queue | null = null;
 let _automationQueue: Queue | null = null;
 let _analyticsQueue: Queue | null = null;
+
+function getEmailQueue() {
+  if (!_emailQueue) {
+    _emailQueue = new Queue("email-queue", { connection: redisConfig });
+  }
+  return _emailQueue;
+}
 
 function getCampaignQueue() {
   if (!_campaignQueue) {
@@ -57,6 +65,28 @@ export async function queueCampaign(campaignId: string) {
   );
 }
 
+export interface DirectEmailPayload {
+  emailId: string;
+  campaignId: string;
+  contactId: string;
+  to: string;
+  subject: string;
+  html: string;
+  fromName: string;
+  fromEmail: string;
+  replyTo?: string;
+  trackingId: string;
+}
+
+export async function queueDirectEmail(payload: DirectEmailPayload) {
+  const queue = getEmailQueue();
+  return queue.add(
+    "send-email",
+    { type: "send-email", ...payload },
+    { jobId: `direct-${payload.emailId}`, attempts: 3, backoff: { type: "exponential", delay: 5000 } }
+  );
+}
+
 export async function queueAutomationTrigger(automationId: string, contactId: string) {
   const queue = getAutomationQueue();
   return queue.add(
@@ -85,7 +115,7 @@ export async function queueTrackingEvent(
 
 export async function getQueueStats() {
   const queues = [
-    { name: "email-queue", queue: new Queue("email-queue", { connection: redisConfig }) },
+    { name: "email-queue", queue: getEmailQueue() },
     { name: "campaign-queue", queue: getCampaignQueue() },
     { name: "automation-queue", queue: getAutomationQueue() },
     { name: "analytics-queue", queue: getAnalyticsQueue() },

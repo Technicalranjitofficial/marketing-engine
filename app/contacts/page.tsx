@@ -6,8 +6,9 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Badge } from "@/components/ui/Table";
 import { Button } from "@/components/ui/Button";
 import { Input, Select } from "@/components/ui/Input";
-import { Plus, Search, Trash2, RefreshCw, X, Users, Upload } from "lucide-react";
+import { Plus, Search, Trash2, RefreshCw, X, Users, Upload, Mail, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
+import Link from "next/link";
 
 interface Contact {
   id: string;
@@ -30,6 +31,13 @@ interface ContactList {
   name: string;
 }
 
+interface Template {
+  id: string;
+  name: string;
+  thumbnail: string;
+  category: string;
+}
+
 const STATUS_COLORS: Record<string, "default" | "success" | "danger" | "warning"> = {
   ACTIVE: "success",
   UNSUBSCRIBED: "default",
@@ -41,6 +49,7 @@ const STATUS_COLORS: Record<string, "default" | "success" | "danger" | "warning"
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [lists, setLists] = useState<ContactList[]>([]);
+  const [templates, setTemplates] = useState<Template[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -48,6 +57,17 @@ export default function ContactsPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [showBulk, setShowBulk] = useState(false);
+  const [sendTarget, setSendTarget] = useState<Contact | null>(null);
+  const [sendForm, setSendForm] = useState({
+    subject: "",
+    fromEmail: "support@kiitconnect.com",
+    fromName: "KIIT Connect",
+    templateId: "",
+    htmlContent: "",
+    ctaUrl: "",
+    ctaText: "",
+  });
+  const [sending, setSending] = useState(false);
   const [saving, setSaving] = useState(false);
   const [bulkText, setBulkText] = useState("");
   const [bulkListId, setBulkListId] = useState("");
@@ -74,15 +94,51 @@ export default function ContactsPage() {
   }, [page, search, statusFilter]);
 
   const fetchLists = async () => {
-    const res = await fetch("/api/lists");
-    if (res.ok) {
-      const d = await res.json();
-      setLists(d.lists || []);
-    }
+    const [lr, tr] = await Promise.all([fetch("/api/lists"), fetch("/api/templates")]);
+    if (lr.ok) { const d = await lr.json(); setLists(d.lists || []); }
+    if (tr.ok) { const d = await tr.json(); setTemplates(d.templates || []); }
   };
 
   useEffect(() => { fetchLists(); }, []);
   useEffect(() => { fetchContacts(); }, [fetchContacts]);
+
+  const handleSendDirect = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sendTarget) return;
+    if (!sendForm.subject) { toast.error("Subject is required"); return; }
+    if (!sendForm.templateId && !sendForm.htmlContent) { toast.error("Choose a template or enter HTML"); return; }
+    setSending(true);
+    try {
+      const res = await fetch("/api/send-direct", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contactId: sendTarget.id,
+          subject: sendForm.subject,
+          fromEmail: sendForm.fromEmail,
+          fromName: sendForm.fromName,
+          templateId: sendForm.templateId || undefined,
+          htmlContent: sendForm.htmlContent || undefined,
+          templateVars: {
+            firstName: sendTarget.firstName || "",
+            lastName: sendTarget.lastName || "",
+            ctaUrl: sendForm.ctaUrl || "#",
+            ctaText: sendForm.ctaText || "Learn More →",
+          },
+        }),
+      });
+      const d = await res.json();
+      if (res.ok) {
+        toast.success(`Email queued for ${sendTarget.email}!`);
+        setSendTarget(null);
+        setSendForm({ subject: "", fromEmail: "support@kiitconnect.com", fromName: "KIIT Connect", templateId: "", htmlContent: "", ctaUrl: "", ctaText: "" });
+      } else {
+        toast.error(d.error || "Failed to send");
+      }
+    } finally {
+      setSending(false);
+    }
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -296,11 +352,18 @@ export default function ContactsPage() {
                           <TableCell className="text-right tabular-nums text-sm">{c.emailsSent}</TableCell>
                           <TableCell className="text-right text-xs text-[hsl(var(--muted-foreground))]">{new Date(c.createdAt).toLocaleDateString()}</TableCell>
                           <TableCell>
-                            {c.status === "ACTIVE" && (
-                              <Button size="sm" variant="danger" onClick={() => handleDelete(c.id)}>
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            )}
+                            <div className="flex items-center gap-1">
+                              {c.status === "ACTIVE" && (
+                                <Button size="sm" variant="outline" title="Send Email" onClick={() => setSendTarget(c)}>
+                                  <Mail className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
+                              {c.status === "ACTIVE" && (
+                                <Button size="sm" variant="danger" onClick={() => handleDelete(c.id)}>
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -322,6 +385,63 @@ export default function ContactsPage() {
           </Card>
         </div>
       </main>
+
+      {/* Send Email Modal */}
+      {sendTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-[hsl(var(--border))] p-5">
+              <div>
+                <h2 className="font-semibold">Send Email</h2>
+                <p className="text-xs text-[hsl(var(--muted-foreground))]">To: {sendTarget.firstName || ""} {sendTarget.lastName || ""} &lt;{sendTarget.email}&gt;</p>
+              </div>
+              <button onClick={() => setSendTarget(null)} className="rounded-lg p-1.5 hover:bg-[hsl(var(--accent))]"><X className="h-4 w-4" /></button>
+            </div>
+            <form onSubmit={handleSendDirect} className="p-5 space-y-4">
+              <Input label="Subject *" value={sendForm.subject} onChange={e => setSendForm(f => ({ ...f, subject: e.target.value }))} />
+              <div className="grid grid-cols-2 gap-3">
+                <Input label="From Name" value={sendForm.fromName} onChange={e => setSendForm(f => ({ ...f, fromName: e.target.value }))} />
+                <Input label="From Email" value={sendForm.fromEmail} onChange={e => setSendForm(f => ({ ...f, fromEmail: e.target.value }))} />
+              </div>
+              <Select
+                label="Email Template"
+                value={sendForm.templateId}
+                onChange={e => setSendForm(f => ({ ...f, templateId: (e.target as HTMLSelectElement).value }))}
+                options={[
+                  { value: "", label: "— Choose a template —" },
+                  ...templates.map(t => ({ value: t.id, label: `${t.thumbnail} ${t.name} (${t.category})` }))
+                ]}
+              />
+              {!sendForm.templateId && (
+                <div>
+                  <label className="block text-xs font-medium mb-1.5 text-[hsl(var(--muted-foreground))]">Or paste custom HTML</label>
+                  <textarea
+                    rows={5}
+                    value={sendForm.htmlContent}
+                    onChange={e => setSendForm(f => ({ ...f, htmlContent: e.target.value }))}
+                    placeholder="<h1>Hello {{firstName}}</h1>..."
+                    className="w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--input))] px-3 py-2 text-xs font-mono text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--primary))]"
+                  />
+                </div>
+              )}
+              {sendForm.templateId && (
+                <div className="grid grid-cols-2 gap-3 rounded-lg bg-[hsl(var(--accent)/0.4)] p-3 border border-[hsl(var(--border))]">
+                  <Input label="CTA URL" placeholder="https://..." value={sendForm.ctaUrl} onChange={e => setSendForm(f => ({ ...f, ctaUrl: e.target.value }))} />
+                  <Input label="CTA Button Text" placeholder="Get Started →" value={sendForm.ctaText} onChange={e => setSendForm(f => ({ ...f, ctaText: e.target.value }))} />
+                </div>
+              )}
+              <div className="flex items-center gap-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-3 text-xs text-emerald-400">
+                <ChevronRight className="h-3.5 w-3.5 flex-shrink-0" />
+                DKIM-signed · Open & click tracked · Sent via mail.kiitconnect.com
+              </div>
+              <div className="flex justify-end gap-3">
+                <Button type="button" variant="outline" onClick={() => setSendTarget(null)}>Cancel</Button>
+                <Button type="submit" isLoading={sending} leftIcon={<Mail className="h-4 w-4" />}>Send Email</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
