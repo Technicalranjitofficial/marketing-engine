@@ -21,13 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${inter.variable} font-sans antialiased`}>
-        <div className="relative min-h-screen">
-          {/* Background gradient effect */}
-          <div className="fixed inset-0 -z-10 overflow-hidden">
-            <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-[hsl(var(--primary)/0.08)] blur-[100px]" />
-            <div className="absolute top-1/2 -left-40 h-80 w-80 rounded-full bg-[hsl(var(--gradient-mid)/0.06)] blur-[100px]" />
-            <div className="absolute -bottom-40 right-1/3 h-80 w-80 rounded-full bg-[hsl(var(--gradient-end)/0.05)] blur-[100px]" />
-          </div>
+        <div className="relative min-h-screen bg-[hsl(var(--background))]">
           {children}
         </div>
         <Toaster 
