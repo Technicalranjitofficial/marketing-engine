@@ -123,7 +123,7 @@ export const welcomeTemplate: EmailTemplate = {
   thumbnail: "🎓",
   html: (v = {}) => base(`
 <tr>
-  <td style="padding:48px 30px 36px;text-align:center;background:linear-gradient(135deg,rgba(6,214,255,0.06) 0%,rgba(147,51,234,0.06) 100%);">
+  <td class="kc-cell" bgcolor="#080E1E" style="padding:48px 30px 36px;text-align:center;background-color:#080E1E !important;background-image:linear-gradient(135deg,rgba(6,214,255,0.06) 0%,rgba(147,51,234,0.06) 100%);">
     <div style="display:inline-block;width:64px;height:64px;background:rgba(6,214,255,0.1);border:1px solid rgba(6,214,255,0.4);border-radius:16px;line-height:64px;font-size:32px;margin-bottom:20px;">🎓</div>
     <h1 style="margin:0 0 8px;color:#C8DCF0;font-size:28px;font-weight:800;letter-spacing:-0.5px;">Welcome, ${v.firstName || "KIITian"}!</h1>
     <p style="margin:0;color:#7AAFC8;font-size:16px;">You're now part of KIIT's #1 student platform.</p>
@@ -188,7 +188,7 @@ export const premiumTemplate: EmailTemplate = {
   thumbnail: "⚡",
   html: (v = {}) => base(`
 <tr>
-  <td style="padding:48px 30px 36px;text-align:center;background:linear-gradient(135deg,rgba(147,51,234,0.12) 0%,rgba(6,214,255,0.06) 100%);">
+  <td class="kc-cell" bgcolor="#080E1E" style="padding:48px 30px 36px;text-align:center;background-color:#080E1E !important;background-image:linear-gradient(135deg,rgba(147,51,234,0.12) 0%,rgba(6,214,255,0.06) 100%);">
     <div style="display:inline-block;width:64px;height:64px;background:rgba(147,51,234,0.15);border:1px solid rgba(147,51,234,0.5);border-radius:16px;line-height:64px;font-size:32px;margin-bottom:20px;">⚡</div>
     <div style="display:inline-block;padding:4px 14px;background:rgba(147,51,234,0.15);border:1px solid rgba(147,51,234,0.4);border-radius:20px;color:#9333EA;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;">Exclusive Invite</div>
     <h1 style="margin:0 0 8px;color:#C8DCF0;font-size:26px;font-weight:800;">${v.headline || "You've Been Selected"}</h1>
@@ -233,10 +233,10 @@ export const newsletterTemplate: EmailTemplate = {
   thumbnail: "📡",
   html: (v = {}) => base(`
 <tr>
-  <td style="padding:36px 30px 24px;background:rgba(6,214,255,0.03);">
+  <td class="kc-cell" bgcolor="#080E1E" style="padding:36px 30px 24px;background-color:#080E1E !important;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
       <tr>
-        <td>
+        <td bgcolor="#080E1E" style="background-color:#080E1E !important;">
           <div style="color:#06D6FF;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">KIITian Weekly</div>
           <h1 style="margin:0;color:#C8DCF0;font-size:24px;font-weight:800;">${v.headline || "What's New on KIIT Connect"}</h1>
         </td>
@@ -305,7 +305,7 @@ export const promoTemplate: EmailTemplate = {
   thumbnail: "🎯",
   html: (v = {}) => base(`
 <tr>
-  <td style="background:linear-gradient(135deg,rgba(6,214,255,0.10),rgba(147,51,234,0.10));padding:48px 30px;text-align:center;">
+  <td class="kc-cell" bgcolor="#080E1E" style="background-color:#080E1E !important;background-image:linear-gradient(135deg,rgba(6,214,255,0.10),rgba(147,51,234,0.10));padding:48px 30px;text-align:center;">
     <div style="display:inline-block;padding:6px 16px;background:rgba(6,214,255,0.12);border:1px solid rgba(6,214,255,0.4);border-radius:20px;color:#06D6FF;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:20px;">⚡ Limited Time</div>
     <h1 style="margin:0 0 12px;color:#C8DCF0;font-size:32px;font-weight:900;letter-spacing:-1px;">${v.headline || "Special Offer for KIITians"}</h1>
     <p style="margin:0;color:#7AAFC8;font-size:16px;">Exclusively for ${v.firstName || "KIIT Connect"} members.</p>
@@ -396,7 +396,7 @@ export const eventTemplate: EmailTemplate = {
   thumbnail: "🎪",
   html: (v = {}) => base(`
 <tr>
-  <td style="padding:48px 30px 32px;text-align:center;background:linear-gradient(135deg,rgba(20,184,166,0.08),rgba(6,214,255,0.05));">
+  <td class="kc-cell" bgcolor="#080E1E" style="padding:48px 30px 32px;text-align:center;background-color:#080E1E !important;background-image:linear-gradient(135deg,rgba(20,184,166,0.08),rgba(6,214,255,0.05));">
     <div style="display:inline-block;padding:6px 16px;background:rgba(20,184,166,0.12);border:1px solid rgba(20,184,166,0.4);border-radius:20px;color:#14B8A6;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:20px;">You're Invited</div>
     <h1 style="margin:0 0 8px;color:#C8DCF0;font-size:26px;font-weight:800;">${v.headline || "KIIT Connect Community Event"}</h1>
     <p style="margin:0;color:#7AAFC8;font-size:15px;">Reserve your spot before it fills up.</p>
