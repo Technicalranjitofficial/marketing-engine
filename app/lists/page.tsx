@@ -87,7 +87,7 @@ export default function ListsPage() {
 
           {/* Create Modal */}
           {showCreate && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
               <div className="w-full max-w-md rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-2xl">
                 <div className="flex items-center justify-between border-b border-[hsl(var(--border))] p-5">
                   <h2 className="text-lg font-semibold">Create List</h2>

@@ -185,7 +185,7 @@ export default function TemplatesPage() {
 
       {/* Preview Modal */}
       {previewId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
           <div className="w-full max-w-2xl h-[85vh] rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-2xl flex flex-col">
             <div className="flex items-center justify-between border-b border-[hsl(var(--border))] p-4 flex-shrink-0">
               <h2 className="font-semibold">{templates.find(t => t.id === previewId)?.name} — Preview</h2>
@@ -213,7 +213,7 @@ export default function TemplatesPage() {
 
       {/* Send Modal */}
       {showSend && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
           <div className="w-full max-w-lg rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-[hsl(var(--border))] p-5">
               <div className="flex items-center gap-3">

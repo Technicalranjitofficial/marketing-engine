@@ -567,7 +567,7 @@ export default function CampaignDetailPage() {
 
           {/* Email Preview Modal */}
           {showPreview && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
               <div className="relative w-full max-w-4xl max-h-[90vh] bg-[hsl(var(--card))] rounded-xl overflow-hidden">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-[hsl(var(--border))]">
                   <h2 className="text-lg font-semibold">Email Preview</h2>
