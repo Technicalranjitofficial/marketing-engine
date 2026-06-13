@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { Prisma } from "@prisma/client";
 
 // GET /api/inbox?page=1&limit=20&unread=true&search=foo
 export async function GET(req: NextRequest) {
@@ -9,7 +10,7 @@ export async function GET(req: NextRequest) {
   const unread = searchParams.get("unread") === "true";
   const search = searchParams.get("search")?.trim() || "";
 
-  const where: Parameters<typeof prisma.inboundEmail.findMany>[0]["where"] = {};
+  const where: Prisma.InboundEmailWhereInput = {};
   if (unread) where.isRead = false;
   if (search) {
     where.OR = [
