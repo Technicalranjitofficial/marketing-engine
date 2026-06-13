@@ -34,8 +34,12 @@ export async function GET() {
           name: true,
           sentAt: true,
           totalSent: true,
+          totalDelivered: true,
           totalOpened: true,
           totalClicked: true,
+          totalBounced: true,
+          totalComplaints: true,
+          totalUnsubscribed: true,
         },
       }),
       getQueueStats().catch(() => []),
@@ -51,15 +55,19 @@ export async function GET() {
         totalOpened: true,
         totalClicked: true,
         totalBounced: true,
+        totalComplaints: true,
         totalUnsubscribed: true,
       },
     });
 
     const sum = campaignStats._sum;
     const totalSent = sum.totalSent || 0;
+    const totalDelivered = sum.totalDelivered || 0;
     const totalOpened = sum.totalOpened || 0;
     const totalClicked = sum.totalClicked || 0;
     const totalBounced = sum.totalBounced || 0;
+    const totalComplaints = sum.totalComplaints || 0;
+    const totalUnsubscribed = sum.totalUnsubscribed || 0;
 
     return NextResponse.json({
       overview: {
@@ -70,18 +78,24 @@ export async function GET() {
       },
       emailStats: {
         totalSent,
+        totalDelivered,
         totalOpened,
         totalClicked,
         totalBounced,
+        totalComplaints,
+        totalUnsubscribed,
         openRate: totalSent > 0 ? ((totalOpened / totalSent) * 100).toFixed(2) : "0",
         clickRate: totalSent > 0 ? ((totalClicked / totalSent) * 100).toFixed(2) : "0",
         bounceRate: totalSent > 0 ? ((totalBounced / totalSent) * 100).toFixed(2) : "0",
+        deliveryRate: totalSent > 0 ? ((totalDelivered / totalSent) * 100).toFixed(2) : "100",
       },
       recentCampaigns: recentCampaigns.map((c) => ({
         ...c,
         openRate: c.totalSent > 0 ? ((c.totalOpened / c.totalSent) * 100).toFixed(1) : "0",
         clickRate: c.totalSent > 0 ? ((c.totalClicked / c.totalSent) * 100).toFixed(1) : "0",
       })),
+      queueStats,
+      redisConnected,
       system: {
         redisConnected,
         queues: queueStats,
