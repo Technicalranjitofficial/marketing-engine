@@ -271,7 +271,7 @@ export default function CampaignDetailPage() {
                     size="sm"
                     leftIcon={<Send className="h-4 w-4" />}
                     onClick={handleSend}
-                    loading={sending}
+                    isLoading={sending}
                   >
                     Send Now
                   </Button>
@@ -421,7 +421,7 @@ export default function CampaignDetailPage() {
                     className="w-full justify-start"
                     leftIcon={<Send className="h-4 w-4" />}
                     onClick={handleSend}
-                    loading={sending}
+                    isLoading={sending}
                   >
                     Send Campaign
                   </Button>
