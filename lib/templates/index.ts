@@ -1,5 +1,7 @@
 // ============================================================
-// BEAUTIFUL EMAIL TEMPLATES LIBRARY
+// KIIT CONNECT v3 — PHOSPHOR EMAIL TEMPLATES
+// Design system: #050A15 bg · #06D6FF cyan · #9333EA violet
+// Fonts: Space Grotesk (body) · Bebas Neue unavailable in email → system fallback
 // All templates support {{firstName}}, {{lastName}}, {{email}}
 // {{unsubscribeUrl}} is auto-injected by the email service
 // ============================================================
@@ -10,219 +12,310 @@ export interface EmailTemplate {
   description: string;
   category: string;
   previewText: string;
-  thumbnail: string; // emoji for preview
+  thumbnail: string;
   html: (vars?: Record<string, string>) => string;
 }
 
-// ─── Shared helpers ───────────────────────────────────────────
+// ─── Shared base ─────────────────────────────────────────────
 
-const base = (body: string, footerExtra = "") => `<!DOCTYPE html>
+const base = (body: string, accentColor = "#06D6FF") => `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Email</title>
+<title>KIIT Connect</title>
 </head>
-<body style="margin:0;padding:0;background:#0f0f0f;font-family:'Segoe UI',Arial,sans-serif;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0f0f0f;">
+<body style="margin:0;padding:0;background:#050A15;font-family:'Segoe UI',system-ui,-apple-system,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#050A15;">
 <tr><td align="center" style="padding:40px 16px;">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+<!-- Container -->
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;border-radius:16px;overflow:hidden;border:1px solid rgba(6,214,255,0.15);background:#080E1E;">
+
+<!-- Top accent bar -->
+<tr><td style="height:3px;background:linear-gradient(90deg,#06D6FF,#9333EA,#06D6FF);"></td></tr>
+
 ${body}
+
 <!-- Footer -->
-<tr><td style="padding:32px 30px;text-align:center;border-top:1px solid #1e1e1e;">
-${footerExtra}
-<p style="margin:0 0 8px;color:#555;font-size:13px;">You're receiving this because you subscribed.</p>
-<p style="margin:0;color:#444;font-size:12px;"><a href="{{unsubscribeUrl}}" style="color:#666;text-decoration:underline;">Unsubscribe</a></p>
-</td></tr>
+<tr>
+  <td style="padding:32px 30px;background:#050A15;border-top:1px solid rgba(6,214,255,0.10);">
+    <!-- Logo row -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td align="center" style="padding-bottom:16px;">
+          <table role="presentation" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="width:28px;height:28px;background:rgba(6,214,255,0.08);border:1px solid rgba(6,214,255,0.35);border-radius:7px;text-align:center;vertical-align:middle;">
+                <span style="color:#06D6FF;font-size:12px;font-weight:900;letter-spacing:-0.5px;">KC</span>
+              </td>
+              <td style="padding-left:8px;color:#06D6FF;font-size:14px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;">KIIT CONNECT</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td align="center">
+          <p style="margin:0 0 6px;color:#7AAFC8;font-size:12px;">The #1 student platform for KIIT University</p>
+          <p style="margin:0 0 16px;color:#4A6580;font-size:11px;">
+            <a href="https://kiitconnect.com/academic" style="color:#4A6580;text-decoration:none;">Academic</a> &nbsp;·&nbsp;
+            <a href="https://kiitconnect.com/calculator" style="color:#4A6580;text-decoration:none;">SGPA</a> &nbsp;·&nbsp;
+            <a href="https://kiitconnect.com/ai/chatbot" style="color:#4A6580;text-decoration:none;">AI Chatbot</a> &nbsp;·&nbsp;
+            <a href="https://kiitconnect.com/blogs" style="color:#4A6580;text-decoration:none;">Blogs</a>
+          </p>
+          <p style="margin:0;color:#4A6580;font-size:11px;">
+            You're receiving this because you're part of KIIT Connect.
+            &nbsp;<a href="{{unsubscribeUrl}}" style="color:#06D6FF;text-decoration:underline;opacity:0.6;">Unsubscribe</a>
+          </p>
+        </td>
+      </tr>
+    </table>
+  </td>
+</tr>
+
 </table>
+<!-- /Container -->
+
 </td></tr>
 </table>
 </body>
 </html>`;
 
+// ─── Shared CTA button ────────────────────────────────────────
+
+const ctaBtn = (url: string, text: string, color = "#06D6FF") =>
+  `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+    <tr>
+      <td style="border-radius:8px;background:${color};box-shadow:0 0 20px rgba(6,214,255,0.35);">
+        <a href="${url}" style="display:inline-block;padding:14px 32px;color:#050A15;font-size:14px;font-weight:800;text-decoration:none;letter-spacing:0.5px;border-radius:8px;">${text}</a>
+      </td>
+    </tr>
+  </table>`;
+
 // ─── Template 1: Welcome / Onboarding ────────────────────────
 
 export const welcomeTemplate: EmailTemplate = {
   id: "welcome",
-  name: "Welcome Email",
-  description: "Warm onboarding email for new subscribers",
+  name: "Welcome to KIIT Connect",
+  description: "Warm onboarding email for new KIITians joining the platform",
   category: "Onboarding",
-  previewText: "Welcome aboard! We're thrilled to have you.",
-  thumbnail: "👋",
+  previewText: "Welcome aboard, KIITian! Your journey starts here.",
+  thumbnail: "🎓",
   html: (v = {}) => base(`
 <tr>
-  <td style="background:linear-gradient(135deg,#667eea,#764ba2);border-radius:16px 16px 0 0;padding:50px 30px;text-align:center;">
-    <div style="width:72px;height:72px;background:rgba(255,255,255,.15);border-radius:50%;margin:0 auto 20px;line-height:72px;font-size:36px;">👋</div>
-    <h1 style="margin:0;color:#fff;font-size:30px;font-weight:700;letter-spacing:-0.5px;">Welcome, ${v.firstName || "{{firstName}}"}!</h1>
-    <p style="margin:12px 0 0;color:rgba(255,255,255,.85);font-size:16px;">We're thrilled to have you on board.</p>
+  <td style="padding:48px 30px 36px;text-align:center;background:linear-gradient(135deg,rgba(6,214,255,0.06) 0%,rgba(147,51,234,0.06) 100%);">
+    <div style="display:inline-block;width:64px;height:64px;background:rgba(6,214,255,0.1);border:1px solid rgba(6,214,255,0.4);border-radius:16px;line-height:64px;font-size:32px;margin-bottom:20px;">🎓</div>
+    <h1 style="margin:0 0 8px;color:#C8DCF0;font-size:28px;font-weight:800;letter-spacing:-0.5px;">Welcome, ${v.firstName || "KIITian"}!</h1>
+    <p style="margin:0;color:#7AAFC8;font-size:16px;">You're now part of KIIT's #1 student platform.</p>
   </td>
 </tr>
 <tr>
-  <td style="background:#161616;padding:40px 30px;">
-    <p style="margin:0 0 20px;color:#ccc;font-size:16px;line-height:1.7;">
-      Hey <strong style="color:#fff;">${v.firstName || "{{firstName}}"}</strong>,<br/><br/>
-      Thank you for joining us! You're now part of a growing community. We're here to help you get the most out of your experience.
+  <td style="padding:32px 30px;">
+    <p style="margin:0 0 24px;color:#A8C8E0;font-size:15px;line-height:1.7;">
+      Hey <strong style="color:#C8DCF0;">${v.firstName || "there"}</strong>,<br/><br/>
+      We're excited to have you on KIIT Connect! You now have access to free PYQs, class notes, the SGPA calculator, faculty reviews, AI chatbot, and a growing community of KIITians.
     </p>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+
+    <!-- Feature grid -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
       <tr>
-        <td style="background:#1a1a2e;border-radius:12px;padding:20px;margin-bottom:12px;">
-          <table role="presentation" width="100%"><tr>
-            <td width="40" style="font-size:24px;">📚</td>
-            <td style="color:#ddd;font-size:14px;padding-left:12px;"><strong style="color:#fff;">Explore Resources</strong><br/>Browse our library of guides and tutorials.</td>
-          </tr></table>
+        <td width="48%" style="padding:16px;background:rgba(6,214,255,0.05);border:1px solid rgba(6,214,255,0.12);border-radius:10px;vertical-align:top;">
+          <div style="font-size:22px;margin-bottom:8px;">📚</div>
+          <div style="color:#06D6FF;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Free Resources</div>
+          <div style="color:#7AAFC8;font-size:13px;">PYQs, notes, books — all free, forever.</div>
         </td>
-      </tr>
-      <tr><td height="10"></td></tr>
-      <tr>
-        <td style="background:#1a1a2e;border-radius:12px;padding:20px;">
-          <table role="presentation" width="100%"><tr>
-            <td width="40" style="font-size:24px;">🚀</td>
-            <td style="color:#ddd;font-size:14px;padding-left:12px;"><strong style="color:#fff;">Get Started</strong><br/>Complete your profile and unlock full features.</td>
-          </tr></table>
+        <td width="4%"></td>
+        <td width="48%" style="padding:16px;background:rgba(147,51,234,0.05);border:1px solid rgba(147,51,234,0.15);border-radius:10px;vertical-align:top;">
+          <div style="font-size:22px;margin-bottom:8px;">🤖</div>
+          <div style="color:#9333EA;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">AI Chatbot</div>
+          <div style="color:#7AAFC8;font-size:13px;">KIIT-specific AI to answer all your questions.</div>
         </td>
       </tr>
     </table>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:30px;">
-      <tr><td align="center">
-        <a href="${v.ctaUrl || "#"}" style="display:inline-block;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;text-decoration:none;padding:14px 48px;border-radius:50px;font-size:16px;font-weight:600;box-shadow:0 8px 24px rgba(102,126,234,.4);">${v.ctaText || "Get Started →"}</a>
-      </td></tr>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;">
+      <tr>
+        <td width="48%" style="padding:16px;background:rgba(20,184,166,0.05);border:1px solid rgba(20,184,166,0.15);border-radius:10px;vertical-align:top;">
+          <div style="font-size:22px;margin-bottom:8px;">🔢</div>
+          <div style="color:#14B8A6;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">SGPA Calculator</div>
+          <div style="color:#7AAFC8;font-size:13px;">Calculate your SGPA &amp; CGPA instantly.</div>
+        </td>
+        <td width="4%"></td>
+        <td width="48%" style="padding:16px;background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.15);border-radius:10px;vertical-align:top;">
+          <div style="font-size:22px;margin-bottom:8px;">🏫</div>
+          <div style="color:#F59E0B;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Section Swap</div>
+          <div style="color:#7AAFC8;font-size:13px;">Swap your section with fellow KIITians easily.</div>
+        </td>
+      </tr>
     </table>
+
+    <div style="text-align:center;">
+      ${ctaBtn(v.ctaUrl || "https://kiitconnect.com/get-started", v.ctaText || "Explore KIIT Connect →")}
+    </div>
   </td>
-</tr>`)
+</tr>
+`),
 };
 
-// ─── Template 2: Premium Invitation (KIIT Connect style) ──────
+// ─── Template 2: Premium / Pro Invite ────────────────────────
 
 export const premiumTemplate: EmailTemplate = {
   id: "premium-invite",
-  name: "Premium Invitation",
-  description: "Exclusive upgrade invitation with benefits",
+  name: "Premium / Pro Invite",
+  description: "Exclusive invite or upgrade prompt with Phosphor violet glow",
   category: "Marketing",
-  previewText: "You're invited to something special 👑",
-  thumbnail: "👑",
+  previewText: "You've been selected for something special.",
+  thumbnail: "⚡",
   html: (v = {}) => base(`
 <tr>
-  <td style="background:linear-gradient(135deg,#667eea,#764ba2);border-radius:16px 16px 0 0;padding:50px 30px;text-align:center;">
-    <div style="width:80px;height:80px;background:rgba(255,255,255,.2);border-radius:50%;margin:0 auto 20px;line-height:80px;font-size:42px;">👑</div>
-    <h1 style="margin:0;color:#fff;font-size:28px;font-weight:700;">You're Invited to Premium</h1>
-    <p style="margin:10px 0 0;color:rgba(255,255,255,.9);font-size:16px;">Exclusive access just for you</p>
+  <td style="padding:48px 30px 36px;text-align:center;background:linear-gradient(135deg,rgba(147,51,234,0.12) 0%,rgba(6,214,255,0.06) 100%);">
+    <div style="display:inline-block;width:64px;height:64px;background:rgba(147,51,234,0.15);border:1px solid rgba(147,51,234,0.5);border-radius:16px;line-height:64px;font-size:32px;margin-bottom:20px;">⚡</div>
+    <div style="display:inline-block;padding:4px 14px;background:rgba(147,51,234,0.15);border:1px solid rgba(147,51,234,0.4);border-radius:20px;color:#9333EA;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;">Exclusive Invite</div>
+    <h1 style="margin:0 0 8px;color:#C8DCF0;font-size:26px;font-weight:800;">${v.headline || "You've Been Selected"}</h1>
+    <p style="margin:0;color:#7AAFC8;font-size:15px;">Special access reserved for ${v.firstName || "you"}.</p>
   </td>
 </tr>
 <tr>
-  <td style="background:#161616;padding:40px 30px;">
-    <h2 style="margin:0 0 15px;color:#fff;font-size:22px;">Hey ${v.firstName || "{{firstName}}"}! 👋</h2>
-    <p style="margin:0 0 24px;color:#bbb;font-size:15px;line-height:1.7;">
-      We've selected you for exclusive Premium access. Here's what you unlock:
+  <td style="padding:32px 30px;">
+    <p style="margin:0 0 20px;color:#A8C8E0;font-size:15px;line-height:1.7;">
+      Hi <strong style="color:#C8DCF0;">${v.firstName || "there"}</strong>,<br/><br/>
+      We've handpicked a select group of KIITians for early access to something we've been building for a while. You're on that list.
     </p>
-    <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:14px;padding:24px;">
-      ${["📚 Unlimited access to all content","🎯 AI-powered tools & solutions","⚡ Priority support (response in minutes)","🚀 Early access to new features"].map(f => `
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:14px;"><tr>
-        <td width="32" style="font-size:18px;">${f.substring(0,2)}</td>
-        <td style="color:#ddd;font-size:14px;padding-left:10px;">${f.substring(3)}</td>
-      </tr></table>`).join("")}
+
+    <!-- Highlight box -->
+    <div style="background:rgba(147,51,234,0.07);border:1px solid rgba(147,51,234,0.25);border-left:3px solid #9333EA;border-radius:10px;padding:20px;margin-bottom:28px;">
+      <div style="color:#9333EA;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;">What you get</div>
+      <ul style="margin:0;padding-left:20px;color:#A8C8E0;font-size:14px;line-height:2;">
+        <li>Priority access to new features</li>
+        <li>Ad-free experience across the platform</li>
+        <li>Exclusive community badge</li>
+        <li>Direct feedback channel to the team</li>
+      </ul>
     </div>
-    <div style="background:#1a1a2e;border:1px solid #2d2d5e;border-radius:12px;padding:16px 20px;margin-top:20px;text-align:center;">
-      <p style="margin:0;color:#a78bfa;font-size:14px;font-weight:600;">🎁 LIMITED TIME: Get 30% OFF Your First Month</p>
+
+    <div style="text-align:center;">
+      ${ctaBtn(v.ctaUrl || "https://kiitconnect.com", v.ctaText || "Claim Your Access →", "#9333EA")}
     </div>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;">
-      <tr><td align="center">
-        <a href="${v.ctaUrl || "#"}" style="display:inline-block;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;text-decoration:none;padding:16px 52px;border-radius:50px;font-size:17px;font-weight:600;box-shadow:0 8px 25px rgba(102,126,234,.4);">Upgrade to Premium →</a>
-      </td></tr>
-    </table>
-    <p style="margin:16px 0 0;text-align:center;color:#555;font-size:12px;">No credit card required · Cancel anytime</p>
+    <p style="text-align:center;margin:16px 0 0;color:#4A6580;font-size:12px;">This invite expires in 48 hours.</p>
   </td>
-</tr>`)
+</tr>
+`),
 };
 
 // ─── Template 3: Newsletter ───────────────────────────────────
 
 export const newsletterTemplate: EmailTemplate = {
   id: "newsletter",
-  name: "Monthly Newsletter",
-  description: "Clean newsletter with articles and updates",
+  name: "KIITian Weekly",
+  description: "Weekly digest newsletter for KIIT Connect community",
   category: "Newsletter",
-  previewText: "Your monthly digest is here!",
-  thumbnail: "📰",
+  previewText: "This week on KIIT Connect — resources, updates & more.",
+  thumbnail: "📡",
   html: (v = {}) => base(`
 <tr>
-  <td style="background:#161616;border-radius:16px 16px 0 0;padding:30px;border-bottom:3px solid #667eea;">
-    <table role="presentation" width="100%"><tr>
-      <td><span style="color:#667eea;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:2px;">MONTHLY DIGEST</span></td>
-      <td align="right"><span style="color:#555;font-size:13px;">${v.date || new Date().toLocaleDateString("en-US",{month:"long",year:"numeric"})}</span></td>
-    </tr></table>
-    <h1 style="margin:16px 0 0;color:#fff;font-size:26px;font-weight:700;">${v.headline || "What's New This Month"}</h1>
+  <td style="padding:36px 30px 24px;background:rgba(6,214,255,0.03);">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td>
+          <div style="color:#06D6FF;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">KIITian Weekly</div>
+          <h1 style="margin:0;color:#C8DCF0;font-size:24px;font-weight:800;">${v.headline || "What's New on KIIT Connect"}</h1>
+        </td>
+        <td width="60" align="right" style="font-size:36px;">📡</td>
+      </tr>
+    </table>
+    <div style="height:1px;background:linear-gradient(90deg,#06D6FF,transparent);margin-top:16px;opacity:0.3;"></div>
   </td>
 </tr>
 <tr>
-  <td style="background:#111;padding:30px;">
-    <p style="margin:0 0 24px;color:#bbb;font-size:15px;line-height:1.7;">
-      Hi ${v.firstName || "{{firstName}}"}, here's your curated update for this month.
+  <td style="padding:24px 30px 32px;">
+    <p style="margin:0 0 24px;color:#A8C8E0;font-size:15px;line-height:1.7;">
+      Hey ${v.firstName || "KIITian"} 👋<br/><br/>
+      Here's your weekly roundup of everything happening on KIIT Connect.
     </p>
-    ${[
-      {emoji:"🔥",title:v.article1Title||"Featured Story",desc:v.article1Desc||"Your most important story or announcement goes here. Keep it short and compelling."},
-      {emoji:"💡",title:v.article2Title||"Tip of the Month",desc:v.article2Desc||"Share a useful tip, trick, or insight your audience will appreciate."},
-      {emoji:"📊",title:v.article3Title||"By the Numbers",desc:v.article3Desc||"Share a key metric or stat that demonstrates value."},
-    ].map(a => `
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;background:#161616;border-radius:12px;overflow:hidden;">
+
+    <!-- Story 1 -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;background:rgba(6,214,255,0.04);border:1px solid rgba(6,214,255,0.10);border-radius:10px;overflow:hidden;">
       <tr>
-        <td style="padding:20px;">
-          <table role="presentation" width="100%"><tr>
-            <td width="40" style="font-size:24px;vertical-align:top;padding-top:2px;">${a.emoji}</td>
-            <td style="padding-left:14px;">
-              <p style="margin:0 0 6px;color:#fff;font-size:15px;font-weight:600;">${a.title}</p>
-              <p style="margin:0;color:#999;font-size:13px;line-height:1.6;">${a.desc}</p>
-            </td>
-          </tr></table>
+        <td style="padding:18px 20px;">
+          <div style="color:#06D6FF;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">📚 Resources Update</div>
+          <div style="color:#C8DCF0;font-size:14px;font-weight:600;margin-bottom:6px;">100+ New PYQs Added This Week</div>
+          <div style="color:#7AAFC8;font-size:13px;line-height:1.6;">Semester 5 &amp; 6 PYQs across all branches are now available — completely free.</div>
         </td>
       </tr>
-    </table>`).join("")}
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;">
-      <tr><td align="center">
-        <a href="${v.ctaUrl||"#"}" style="display:inline-block;background:#667eea;color:#fff;text-decoration:none;padding:13px 42px;border-radius:8px;font-size:15px;font-weight:600;">${v.ctaText||"Read Full Issue →"}</a>
-      </td></tr>
     </table>
+
+    <!-- Story 2 -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;background:rgba(147,51,234,0.04);border:1px solid rgba(147,51,234,0.12);border-radius:10px;overflow:hidden;">
+      <tr>
+        <td style="padding:18px 20px;">
+          <div style="color:#9333EA;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">🤖 AI Feature</div>
+          <div style="color:#C8DCF0;font-size:14px;font-weight:600;margin-bottom:6px;">AI Chatbot Now Supports KIIT Syllabus Q&amp;A</div>
+          <div style="color:#7AAFC8;font-size:13px;line-height:1.6;">Ask anything about your syllabus and get instant, accurate answers from our KIIT-trained AI.</div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Story 3 -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;background:rgba(20,184,166,0.04);border:1px solid rgba(20,184,166,0.12);border-radius:10px;overflow:hidden;">
+      <tr>
+        <td style="padding:18px 20px;">
+          <div style="color:#14B8A6;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">🏛 Community</div>
+          <div style="color:#C8DCF0;font-size:14px;font-weight:600;margin-bottom:6px;">Join 50,000+ KIITians on the Platform</div>
+          <div style="color:#7AAFC8;font-size:13px;line-height:1.6;">The community keeps growing. Invite your batchmates and unlock more features together.</div>
+        </td>
+      </tr>
+    </table>
+
+    <div style="text-align:center;">
+      ${ctaBtn(v.ctaUrl || "https://kiitconnect.com", v.ctaText || "Read More on KIIT Connect →")}
+    </div>
   </td>
-</tr>`)
+</tr>
+`),
 };
 
-// ─── Template 4: Flash Sale / Promo ───────────────────────────
+// ─── Template 4: Promo / Offer ────────────────────────────────
 
 export const promoTemplate: EmailTemplate = {
   id: "promo",
-  name: "Flash Sale / Promo",
-  description: "High-impact sales email with countdown feel",
+  name: "Limited Offer",
+  description: "Urgency-driven promotional email with cyan/violet split",
   category: "Promotional",
-  previewText: "⚡ Limited time offer — don't miss this!",
-  thumbnail: "⚡",
+  previewText: "Limited time — don't miss this.",
+  thumbnail: "🎯",
   html: (v = {}) => base(`
 <tr>
-  <td style="background:linear-gradient(135deg,#f093fb,#f5576c);border-radius:16px 16px 0 0;padding:50px 30px;text-align:center;">
-    <p style="margin:0 0 10px;background:rgba(255,255,255,.2);display:inline-block;padding:6px 18px;border-radius:50px;color:#fff;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Limited Time Offer</p>
-    <h1 style="margin:16px 0 8px;color:#fff;font-size:42px;font-weight:800;">${v.discount||"30% OFF"}</h1>
-    <p style="margin:0;color:rgba(255,255,255,.9);font-size:18px;">${v.offerLine||"Everything. Today Only."}</p>
+  <td style="background:linear-gradient(135deg,rgba(6,214,255,0.10),rgba(147,51,234,0.10));padding:48px 30px;text-align:center;">
+    <div style="display:inline-block;padding:6px 16px;background:rgba(6,214,255,0.12);border:1px solid rgba(6,214,255,0.4);border-radius:20px;color:#06D6FF;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:20px;">⚡ Limited Time</div>
+    <h1 style="margin:0 0 12px;color:#C8DCF0;font-size:32px;font-weight:900;letter-spacing:-1px;">${v.headline || "Special Offer for KIITians"}</h1>
+    <p style="margin:0;color:#7AAFC8;font-size:16px;">Exclusively for ${v.firstName || "KIIT Connect"} members.</p>
   </td>
 </tr>
 <tr>
-  <td style="background:#161616;padding:40px 30px;">
-    <p style="margin:0 0 20px;color:#ccc;font-size:15px;line-height:1.7;text-align:center;">
-      Hey ${v.firstName||"{{firstName}}"}, this deal is too good to miss.
+  <td style="padding:32px 30px;">
+    <p style="margin:0 0 24px;color:#A8C8E0;font-size:15px;line-height:1.7;">
+      Hey <strong style="color:#C8DCF0;">${v.firstName || "KIITian"}</strong>,<br/><br/>
+      We've been working on something special, and you get first access. This offer is only available to a limited number of students — and you're one of them.
     </p>
-    <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:14px;padding:24px;margin-bottom:24px;">
-      ${(v.items||"Premium Plan\nAll Features\nPriority Support").split("\n").map(item => `
-      <table role="presentation" width="100%" style="margin-bottom:10px;"><tr>
-        <td width="24"><div style="width:8px;height:8px;background:#f5576c;border-radius:50%;margin-top:4px;"></div></td>
-        <td style="color:#ddd;font-size:14px;">${item}</td>
-        <td align="right" style="color:#10b981;font-size:13px;font-weight:600;">✓ Included</td>
-      </tr></table>`).join("")}
-    </div>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-      <tr><td align="center">
-        <a href="${v.ctaUrl||"#"}" style="display:inline-block;background:linear-gradient(135deg,#f093fb,#f5576c);color:#fff;text-decoration:none;padding:16px 56px;border-radius:50px;font-size:17px;font-weight:700;box-shadow:0 8px 24px rgba(245,87,108,.4);">${v.ctaText||"Claim Your Discount →"}</a>
-      </td></tr>
+
+    <!-- Offer box -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+      <tr>
+        <td style="padding:28px;background:rgba(6,214,255,0.05);border:1px solid rgba(6,214,255,0.20);border-radius:12px;text-align:center;box-shadow:0 0 40px rgba(6,214,255,0.05);">
+          <div style="color:#7AAFC8;font-size:13px;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;">Offer details</div>
+          <div style="color:#06D6FF;font-size:36px;font-weight:900;margin:8px 0;">${v.offerText || "FREE Premium Access"}</div>
+          <div style="color:#A8C8E0;font-size:13px;">${v.offerSubtext || "No credit card required. Just your KIIT email."}</div>
+        </td>
+      </tr>
     </table>
-    <p style="margin:16px 0 0;text-align:center;color:#555;font-size:12px;">Offer expires at midnight · Use code <strong style="color:#f5576c;">${v.code||"SAVE30"}</strong></p>
+
+    <div style="text-align:center;margin-bottom:12px;">
+      ${ctaBtn(v.ctaUrl || "https://kiitconnect.com", v.ctaText || "Claim This Offer →")}
+    </div>
+    <p style="text-align:center;margin:0;color:#4A6580;font-size:12px;">⏱ Offer ends soon. Don't wait.</p>
   </td>
-</tr>`)
+</tr>
+`),
 };
 
 // ─── Template 5: Re-engagement ────────────────────────────────
@@ -230,193 +323,203 @@ export const promoTemplate: EmailTemplate = {
 export const reengagementTemplate: EmailTemplate = {
   id: "reengagement",
   name: "We Miss You",
-  description: "Win-back inactive subscribers",
+  description: "Win-back email for inactive KIIT Connect users",
   category: "Retention",
-  previewText: "We haven't seen you in a while...",
-  thumbnail: "💔",
+  previewText: "It's been a while, KIITian. Come back.",
+  thumbnail: "🔁",
   html: (v = {}) => base(`
 <tr>
-  <td style="background:#161616;border-radius:16px 16px 0 0;padding:50px 30px;text-align:center;">
-    <div style="font-size:56px;margin-bottom:16px;">💔</div>
-    <h1 style="margin:0;color:#fff;font-size:26px;font-weight:700;">We Miss You, ${v.firstName||"{{firstName}}"}.</h1>
-    <p style="margin:12px 0 0;color:#888;font-size:15px;">It's been a while since we last connected.</p>
+  <td style="padding:48px 30px 32px;text-align:center;">
+    <div style="font-size:52px;margin-bottom:16px;">🔁</div>
+    <h1 style="margin:0 0 8px;color:#C8DCF0;font-size:26px;font-weight:800;">We Miss You, ${v.firstName || "KIITian"}</h1>
+    <p style="margin:0;color:#7AAFC8;font-size:15px;">KIIT Connect has changed. A lot.</p>
   </td>
 </tr>
 <tr>
-  <td style="background:#111;padding:40px 30px;">
-    <p style="margin:0 0 24px;color:#bbb;font-size:15px;line-height:1.7;text-align:center;">
-      A lot has changed since you were last here. Here's what you've been missing:
+  <td style="padding:0 30px 32px;">
+    <p style="margin:0 0 24px;color:#A8C8E0;font-size:15px;line-height:1.7;">
+      We noticed you haven't visited in a while. Since you left, we've added a ton of new features and resources just for KIITians like you.
     </p>
-    ${[
-      {emoji:"✨",text: v.update1||"New features and improvements you'll love"},
-      {emoji:"🎁",text: v.update2||"Exclusive deals only for returning members"},
-      {emoji:"🤝",text: v.update3||"A community that's grown and gotten better"},
-    ].map(u => `
-    <div style="background:#161616;border-left:3px solid #667eea;border-radius:0 8px 8px 0;padding:14px 18px;margin-bottom:10px;">
-      <span style="font-size:18px;">${u.emoji}</span>
-      <span style="color:#ccc;font-size:14px;margin-left:10px;">${u.text}</span>
-    </div>`).join("")}
-    <div style="background:#1a1a2e;border-radius:12px;padding:20px;margin:24px 0;text-align:center;">
-      <p style="margin:0;color:#a78bfa;font-size:15px;font-weight:600;">🎁 Come back and get <strong>${v.offer||"1 month free"}</strong></p>
-    </div>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-      <tr>
-        <td align="center" style="padding-right:8px;">
-          <a href="${v.ctaUrl||"#"}" style="display:inline-block;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;text-decoration:none;padding:14px 36px;border-radius:8px;font-size:15px;font-weight:600;">${v.ctaText||"Come Back →"}</a>
-        </td>
-        <td align="center" style="padding-left:8px;">
-          <a href="{{unsubscribeUrl}}" style="display:inline-block;background:#1e1e1e;color:#666;text-decoration:none;padding:14px 36px;border-radius:8px;font-size:14px;border:1px solid #333;">Unsubscribe</a>
-        </td>
-      </tr>
+
+    <!-- What's new list -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;background:rgba(6,214,255,0.03);border:1px solid rgba(6,214,255,0.10);border-radius:12px;">
+      <tr><td style="padding:20px 24px;">
+        <div style="color:#06D6FF;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">What's new since you left</div>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          ${["🤖 AI Chatbot trained on KIIT syllabus",
+             "📊 Live placement stats & alumni data",
+             "🔁 Section swap with real students",
+             "📚 500+ new PYQs across all semesters",
+             "🌐 Faculty reviews & contact directory"].map(item =>
+            `<tr><td style="padding:6px 0;color:#A8C8E0;font-size:14px;border-bottom:1px solid rgba(6,214,255,0.06);">${item}</td></tr>`
+          ).join("")}
+        </table>
+      </td></tr>
     </table>
+
+    <div style="text-align:center;">
+      ${ctaBtn(v.ctaUrl || "https://kiitconnect.com", v.ctaText || "Come Back →")}
+    </div>
   </td>
-</tr>`)
+</tr>
+`),
 };
 
 // ─── Template 6: Event Invite ─────────────────────────────────
 
 export const eventTemplate: EmailTemplate = {
   id: "event-invite",
-  name: "Event Invitation",
-  description: "Webinar, workshop or live event invite",
+  name: "Event Invite",
+  description: "Campus event / webinar invite with teal accent",
   category: "Events",
-  previewText: "You're invited! Reserve your spot now.",
-  thumbnail: "🎉",
+  previewText: "You're invited — reserve your spot now.",
+  thumbnail: "🎪",
   html: (v = {}) => base(`
 <tr>
-  <td style="background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);border-radius:16px 16px 0 0;padding:50px 30px;text-align:center;">
-    <p style="margin:0 0 8px;color:#38bdf8;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:2px;">You're Invited</p>
-    <h1 style="margin:0 0 12px;color:#fff;font-size:28px;font-weight:700;">${v.eventName||"Live Workshop: Level Up Your Skills"}</h1>
-    <div style="display:inline-flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-top:16px;">
-      <span style="background:rgba(255,255,255,.1);color:#fff;padding:8px 18px;border-radius:20px;font-size:13px;">📅 ${v.date||"Saturday, June 15"}</span>
-      <span style="background:rgba(255,255,255,.1);color:#fff;padding:8px 18px;border-radius:20px;font-size:13px;">⏰ ${v.time||"2:00 PM IST"}</span>
-      <span style="background:rgba(255,255,255,.1);color:#fff;padding:8px 18px;border-radius:20px;font-size:13px;">📍 ${v.location||"Online / Zoom"}</span>
-    </div>
+  <td style="padding:48px 30px 32px;text-align:center;background:linear-gradient(135deg,rgba(20,184,166,0.08),rgba(6,214,255,0.05));">
+    <div style="display:inline-block;padding:6px 16px;background:rgba(20,184,166,0.12);border:1px solid rgba(20,184,166,0.4);border-radius:20px;color:#14B8A6;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:20px;">You're Invited</div>
+    <h1 style="margin:0 0 8px;color:#C8DCF0;font-size:26px;font-weight:800;">${v.headline || "KIIT Connect Community Event"}</h1>
+    <p style="margin:0;color:#7AAFC8;font-size:15px;">Reserve your spot before it fills up.</p>
   </td>
 </tr>
 <tr>
-  <td style="background:#161616;padding:40px 30px;">
-    <p style="margin:0 0 20px;color:#bbb;font-size:15px;line-height:1.7;">
-      Hey ${v.firstName||"{{firstName}}"}, we'd love to see you there! Here's what you'll get:
+  <td style="padding:32px 30px;">
+    <p style="margin:0 0 24px;color:#A8C8E0;font-size:15px;line-height:1.7;">
+      Hey <strong style="color:#C8DCF0;">${v.firstName || "KIITian"}</strong>,<br/><br/>
+      We're hosting an exclusive event for the KIIT Connect community. Spots are limited and we'd love to see you there.
     </p>
-    ${(v.agenda||"Introduction & Overview\nHands-on demonstrations\nLive Q&A session\nExclusive resources for attendees").split("\n").map((item,i) => `
-    <table role="presentation" width="100%" style="margin-bottom:8px;"><tr>
-      <td width="32" style="color:#38bdf8;font-size:13px;font-weight:700;">0${i+1}</td>
-      <td style="color:#ddd;font-size:14px;border-left:1px solid #1e3a4a;padding-left:14px;">${item}</td>
-    </tr></table>`).join("")}
-    <div style="background:#0c1929;border:1px solid #1e3a4a;border-radius:12px;padding:16px 20px;margin:24px 0;">
-      <p style="margin:0;color:#38bdf8;font-size:14px;">🎟 Limited seats available — reserve yours now.</p>
-    </div>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-      <tr><td align="center">
-        <a href="${v.ctaUrl||"#"}" style="display:inline-block;background:linear-gradient(135deg,#0ea5e9,#38bdf8);color:#fff;text-decoration:none;padding:15px 50px;border-radius:8px;font-size:16px;font-weight:600;box-shadow:0 8px 24px rgba(14,165,233,.3);">${v.ctaText||"Reserve My Spot →"}</a>
-      </td></tr>
+
+    <!-- Event details -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+      <tr>
+        <td width="48%" style="padding:18px;background:rgba(20,184,166,0.05);border:1px solid rgba(20,184,166,0.15);border-radius:10px;text-align:center;vertical-align:top;">
+          <div style="color:#14B8A6;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">📅 Date</div>
+          <div style="color:#C8DCF0;font-size:15px;font-weight:700;">${v.eventDate || "Coming Soon"}</div>
+        </td>
+        <td width="4%"></td>
+        <td width="48%" style="padding:18px;background:rgba(20,184,166,0.05);border:1px solid rgba(20,184,166,0.15);border-radius:10px;text-align:center;vertical-align:top;">
+          <div style="color:#14B8A6;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">📍 Where</div>
+          <div style="color:#C8DCF0;font-size:15px;font-weight:700;">${v.eventLocation || "Online / KIIT Campus"}</div>
+        </td>
+      </tr>
     </table>
+
+    <div style="text-align:center;">
+      ${ctaBtn(v.ctaUrl || "https://kiitconnect.com", v.ctaText || "Reserve My Spot →", "#14B8A6")}
+    </div>
   </td>
-</tr>`)
+</tr>
+`),
 };
 
-// ─── Template 7: Transactional / Account ─────────────────────
+// ─── Template 7: Transactional ────────────────────────────────
 
 export const transactionalTemplate: EmailTemplate = {
   id: "transactional",
-  name: "Account Update",
-  description: "Clean transactional / confirmation email",
+  name: "Account / OTP Notification",
+  description: "Clean transactional email for OTP, confirmations, and alerts",
   category: "Transactional",
-  previewText: "Important update to your account.",
+  previewText: "Action required on your KIIT Connect account.",
   thumbnail: "🔐",
   html: (v = {}) => base(`
 <tr>
-  <td style="background:#161616;border-radius:16px 16px 0 0;padding:40px 30px;">
-    <table role="presentation" width="100%"><tr>
-      <td><div style="width:48px;height:48px;background:#1a1a2e;border-radius:12px;line-height:48px;text-align:center;font-size:24px;">🔐</div></td>
-      <td style="padding-left:16px;">
-        <p style="margin:0;color:#888;font-size:12px;text-transform:uppercase;letter-spacing:1px;">${v.brand||"Your Platform"}</p>
-        <h2 style="margin:4px 0 0;color:#fff;font-size:18px;font-weight:600;">${v.title||"Account Notification"}</h2>
-      </td>
-    </tr></table>
+  <td style="padding:40px 30px;text-align:center;">
+    <div style="display:inline-block;width:60px;height:60px;background:rgba(6,214,255,0.08);border:1px solid rgba(6,214,255,0.3);border-radius:14px;line-height:60px;font-size:28px;margin-bottom:20px;">🔐</div>
+    <h1 style="margin:0 0 8px;color:#C8DCF0;font-size:22px;font-weight:800;">${v.headline || "Account Notification"}</h1>
+    <p style="margin:0;color:#7AAFC8;font-size:14px;">KIIT Connect Security</p>
   </td>
 </tr>
 <tr>
-  <td style="background:#111;padding:30px;">
-    <p style="margin:0 0 20px;color:#bbb;font-size:15px;line-height:1.7;">
-      Hi ${v.firstName||"{{firstName}}"},<br/><br/>
-      ${v.message||"We wanted to let you know about an important update to your account. Please review the details below."}
+  <td style="padding:0 30px 32px;">
+    <p style="margin:0 0 20px;color:#A8C8E0;font-size:15px;line-height:1.7;">
+      Hi <strong style="color:#C8DCF0;">${v.firstName || "there"}</strong>,<br/><br/>
+      ${v.message || "A security action was requested on your KIIT Connect account. Use the code below to proceed."}
     </p>
-    ${v.details ? `
-    <div style="background:#161616;border-radius:10px;padding:20px;margin:20px 0;">
-      ${v.details.split("\n").map(d => {
-        const [label,val] = d.split(":");
-        return `<table role="presentation" width="100%" style="margin-bottom:10px;"><tr>
-          <td style="color:#666;font-size:13px;width:40%;">${label}</td>
-          <td style="color:#ddd;font-size:13px;text-align:right;">${val||""}</td>
-        </tr></table>`;
-      }).join("")}
-    </div>` : `
-    <div style="background:#161616;border-radius:10px;padding:20px;margin:20px 0;">
-      <table role="presentation" width="100%" style="margin-bottom:10px;"><tr>
-        <td style="color:#666;font-size:13px;">Status</td>
-        <td style="color:#10b981;font-size:13px;font-weight:600;text-align:right;">✓ Active</td>
-      </tr></table>
-      <table role="presentation" width="100%" style="margin-bottom:10px;"><tr>
-        <td style="color:#666;font-size:13px;">Email</td>
-        <td style="color:#ddd;font-size:13px;text-align:right;">{{email}}</td>
-      </tr></table>
-      <table role="presentation" width="100%"><tr>
-        <td style="color:#666;font-size:13px;">Date</td>
-        <td style="color:#ddd;font-size:13px;text-align:right;">${new Date().toLocaleDateString()}</td>
-      </tr></table>
-    </div>`}
-    ${v.ctaUrl ? `
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;">
-      <tr><td align="center">
-        <a href="${v.ctaUrl}" style="display:inline-block;background:#667eea;color:#fff;text-decoration:none;padding:13px 40px;border-radius:8px;font-size:15px;font-weight:600;">${v.ctaText||"View Account →"}</a>
-      </td></tr>
-    </table>` : ""}
-    <p style="margin:20px 0 0;color:#555;font-size:12px;">If you didn't request this change, please contact support immediately.</p>
+
+    <!-- OTP / Code box -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      <tr>
+        <td style="padding:24px;background:rgba(6,214,255,0.06);border:1px solid rgba(6,214,255,0.25);border-radius:12px;text-align:center;">
+          <div style="color:#7AAFC8;font-size:12px;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">Your Code</div>
+          <div style="color:#06D6FF;font-size:36px;font-weight:900;letter-spacing:8px;font-family:'Courier New',monospace;">${v.otpCode || "------"}</div>
+          <div style="color:#4A6580;font-size:12px;margin-top:8px;">Expires in 10 minutes</div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Security notice -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      <tr>
+        <td style="padding:14px 16px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.15);border-left:3px solid #F59E0B;border-radius:8px;">
+          <p style="margin:0;color:#A8C8E0;font-size:13px;line-height:1.6;">⚠️ If you did not request this, please ignore this email. Your account remains secure.</p>
+        </td>
+      </tr>
+    </table>
+
+    <div style="text-align:center;">
+      ${ctaBtn(v.ctaUrl || "https://kiitconnect.com", v.ctaText || "Go to KIIT Connect")}
+    </div>
   </td>
-</tr>`)
+</tr>
+`),
 };
 
-// ─── Template 8: Product Launch ───────────────────────────────
+// ─── Template 8: Product / Feature Launch ────────────────────
 
 export const launchTemplate: EmailTemplate = {
   id: "product-launch",
-  name: "Product Launch",
-  description: "Announce a new product, feature or update",
+  name: "Feature Launch",
+  description: "Bold feature announcement with the full Phosphor gradient treatment",
   category: "Marketing",
-  previewText: "Introducing something you've been waiting for 🚀",
+  previewText: "Something new just dropped on KIIT Connect.",
   thumbnail: "🚀",
   html: (v = {}) => base(`
 <tr>
-  <td style="background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);border-radius:16px 16px 0 0;padding:60px 30px;text-align:center;">
-    <p style="margin:0 0 12px;color:#a78bfa;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:3px;">Introducing</p>
-    <h1 style="margin:0 0 16px;color:#fff;font-size:36px;font-weight:800;line-height:1.2;">${v.productName||"Something Amazing"}</h1>
-    <p style="margin:0;color:rgba(255,255,255,.7);font-size:17px;max-width:400px;margin:0 auto;">${v.tagline||"The product you've been waiting for is finally here."}</p>
-    <div style="margin-top:30px;font-size:72px;">${v.emoji||"🚀"}</div>
+  <td style="padding:0;">
+    <!-- Hero with full gradient -->
+    <div style="background:linear-gradient(135deg,#050A15 0%,#0D0A25 40%,#080E1E 100%);padding:52px 30px;text-align:center;position:relative;">
+      <!-- Glow orbs (simulated via borders) -->
+      <div style="display:inline-block;padding:6px 16px;background:rgba(6,214,255,0.1);border:1px solid rgba(6,214,255,0.35);border-radius:20px;color:#06D6FF;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:20px;">🚀 New Feature</div>
+      <h1 style="margin:0 0 12px;color:#C8DCF0;font-size:30px;font-weight:900;letter-spacing:-0.5px;line-height:1.2;">${v.headline || "Something New Just Launched"}</h1>
+      <p style="margin:0;color:#7AAFC8;font-size:16px;max-width:400px;margin-left:auto;margin-right:auto;">${v.subheadline || "Built for KIITians. Ready for you."}</p>
+    </div>
   </td>
 </tr>
 <tr>
-  <td style="background:#161616;padding:40px 30px;">
-    <p style="margin:0 0 24px;color:#bbb;font-size:15px;line-height:1.7;text-align:center;">
-      Hey ${v.firstName||"{{firstName}}"}, ${v.intro||"we've been working on this for months and we're so excited to finally share it with you."}
+  <td style="padding:32px 30px;">
+    <p style="margin:0 0 24px;color:#A8C8E0;font-size:15px;line-height:1.7;">
+      Hey <strong style="color:#C8DCF0;">${v.firstName || "KIITian"}</strong>,<br/><br/>
+      We've been quietly building something new and it's finally here. This is one of the most requested features from the community — and we think you're going to love it.
     </p>
-    <div style="display:grid;gap:12px;">
-      ${(v.features||"⚡ Blazing fast performance\n🎯 Built for power users\n🔒 Enterprise-grade security\n🌈 Beautiful, intuitive design").split("\n").map(f => `
-      <div style="background:#1a1a2e;border-radius:10px;padding:16px 20px;border:1px solid #2d2d5e;">
-        <span style="color:#fff;font-size:14px;">${f}</span>
-      </div>`).join("")}
-    </div>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:32px;">
-      <tr><td align="center">
-        <a href="${v.ctaUrl||"#"}" style="display:inline-block;background:linear-gradient(135deg,#a78bfa,#8b5cf6);color:#fff;text-decoration:none;padding:16px 56px;border-radius:50px;font-size:17px;font-weight:700;box-shadow:0 8px 24px rgba(139,92,246,.4);">${v.ctaText||"Try It Now →"}</a>
-      </td></tr>
+
+    <!-- Feature highlight -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+      <tr>
+        <td style="padding:20px 24px;background:linear-gradient(135deg,rgba(6,214,255,0.06),rgba(147,51,234,0.06));border:1px solid rgba(6,214,255,0.15);border-radius:12px;">
+          <div style="color:#06D6FF;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">✨ Highlights</div>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+            ${["Fast, intuitive, and built for KIIT",
+               "Completely free for all students",
+               "Works on mobile and desktop",
+               "Your feedback shaped this feature"].map(item =>
+              `<tr><td style="padding:5px 0;color:#A8C8E0;font-size:14px;">
+                <span style="color:#06D6FF;margin-right:8px;">→</span>${item}
+              </td></tr>`
+            ).join("")}
+          </table>
+        </td>
+      </tr>
     </table>
+
+    <div style="text-align:center;margin-top:28px;">
+      ${ctaBtn(v.ctaUrl || "https://kiitconnect.com", v.ctaText || "Try It Now →")}
+    </div>
   </td>
-</tr>`)
+</tr>
+`),
 };
 
-// ─── Export all ───────────────────────────────────────────────
+// ─── Exports ──────────────────────────────────────────────────
 
 export const ALL_TEMPLATES: EmailTemplate[] = [
   welcomeTemplate,
@@ -437,11 +540,10 @@ export function renderTemplate(id: string, vars: Record<string, string> = {}): s
   const t = getTemplateById(id);
   if (!t) throw new Error(`Template "${id}" not found`);
   let html = t.html(vars);
-  // Safety net: replace any remaining unreplaced {{var}} placeholders
-  // so literal template tags never reach the recipient's inbox
+  // Safety net: strip any remaining unreplaced {{var}} placeholders
   html = html.replace(/\{\{(\w+)\}\}/g, (_, key) => {
-    if (key === "unsubscribeUrl") return "#"; // fallback: anchor only
-    return ""; // strip unknown vars
+    if (key === "unsubscribeUrl") return "#";
+    return "";
   });
   return html;
 }
