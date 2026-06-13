@@ -101,7 +101,10 @@ export default function KIITUsersPage() {
     if (selected.size === 0) { toast.error("Select at least one user"); return; }
     try {
       const res = await fetch("/api/templates");
-      if (res.ok) setTemplates(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        setTemplates(Array.isArray(data) ? data : (data.templates ?? []));
+      }
     } catch { /* ignore */ }
     setShowModal(true);
   };
