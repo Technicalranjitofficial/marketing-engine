@@ -126,6 +126,13 @@ class EmailService {
         selectors: [
           { selector: "a", options: { hideLinkHrefIfSameAsText: true } },
           { selector: "img", format: "skip" },
+          { selector: "strong", format: "inline" },
+          { selector: "b", format: "inline" },
+          { selector: "em", format: "inline" },
+          { selector: "i", format: "inline" },
+          { selector: "h1", options: { uppercase: false } },
+          { selector: "h2", options: { uppercase: false } },
+          { selector: "h3", options: { uppercase: false } },
         ],
       });
 

@@ -31,32 +31,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `Contact status is ${contact.status} — cannot send` }, { status: 400 });
     }
 
-    // Resolve HTML from template or raw html
-    let html: string;
-    if (templateId) {
-      const vars: Record<string, string> = {
-        firstName: contact.firstName || "",
-        lastName: contact.lastName || "",
-        email: contact.email,
-        ...templateVars,
-      };
-      html = renderTemplate(templateId, vars);
-    } else if (htmlContent) {
-      // Replace personalisation tags
-      html = htmlContent
-        .replace(/{{firstName}}/g, contact.firstName || "")
-        .replace(/{{lastName}}/g, contact.lastName || "")
-        .replace(/{{email}}/g, contact.email);
-    } else {
+    if (!templateId && !htmlContent) {
       return NextResponse.json({ error: "templateId or htmlContent is required" }, { status: 400 });
     }
 
-    // Create a "one-off" campaign record so stats are tracked
+    // Create campaign + email records FIRST so we have IDs for the unsubscribe URL
     const campaign = await prisma.campaign.create({
       data: {
         name: `Direct: ${subject} → ${contact.email}`,
         subject,
-        htmlContent: html,
+        htmlContent: "", // filled in below after rendering
         fromName: fromName || process.env.DEFAULT_FROM_NAME || "Marketing Team",
         fromEmail,
         replyTo: replyTo || fromEmail,
@@ -65,8 +49,36 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Create email record
     const trackingId = `${campaign.id}-${contact.id}`;
+    const baseUrl = process.env.BASE_URL || "http://localhost:3000";
+    const unsubscribeUrl = `${baseUrl}/api/unsubscribe/${trackingId}`;
+
+    // Resolve HTML — now we can inject the real unsubscribeUrl
+    let html: string;
+    if (templateId) {
+      const vars: Record<string, string> = {
+        firstName: contact.firstName || "",
+        lastName: contact.lastName || "",
+        email: contact.email,
+        unsubscribeUrl,
+        ...templateVars,
+      };
+      html = renderTemplate(templateId, vars);
+    } else {
+      // Replace personalisation tags in raw HTML
+      html = (htmlContent as string)
+        .replace(/{{firstName}}/g, contact.firstName || "")
+        .replace(/{{lastName}}/g, contact.lastName || "")
+        .replace(/{{email}}/g, contact.email)
+        .replace(/{{unsubscribeUrl}}/g, unsubscribeUrl);
+    }
+
+    // Persist rendered HTML back to campaign record
+    await prisma.campaign.update({
+      where: { id: campaign.id },
+      data: { htmlContent: html },
+    });
+
     const email = await prisma.email.create({
       data: {
         campaignId: campaign.id,

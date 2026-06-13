@@ -436,5 +436,12 @@ export function getTemplateById(id: string): EmailTemplate | undefined {
 export function renderTemplate(id: string, vars: Record<string, string> = {}): string {
   const t = getTemplateById(id);
   if (!t) throw new Error(`Template "${id}" not found`);
-  return t.html(vars);
+  let html = t.html(vars);
+  // Safety net: replace any remaining unreplaced {{var}} placeholders
+  // so literal template tags never reach the recipient's inbox
+  html = html.replace(/\{\{(\w+)\}\}/g, (_, key) => {
+    if (key === "unsubscribeUrl") return "#"; // fallback: anchor only
+    return ""; // strip unknown vars
+  });
+  return html;
 }
