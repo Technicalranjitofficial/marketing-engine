@@ -124,22 +124,32 @@ class ImapIdleService {
 
   private async fetchAndSave(uids: number[]) {
     if (!this.client || uids.length === 0) return;
+
+    const toMark: string[] = [];
+
+    // Fetch all messages first, THEN mark as Seen.
+    // Calling messageFlagsAdd inside the fetch loop can interrupt the IMAP stream.
     for await (const msg of this.client.fetch(
       uids,
-      { source: true, envelope: true, flags: true },
+      { source: true, envelope: true },
       { uid: true }
     )) {
       const envMsgId = msg.envelope?.messageId;
-      const envSubject = msg.envelope?.subject;
-      console.log(`[IMAP] Processing UID ${msg.uid}: "${envSubject}" msgId=${envMsgId}`);
+      console.log(`[IMAP] Processing UID ${msg.uid}: "${msg.envelope?.subject}" msgId=${envMsgId}`);
       try {
         const saved = await this.saveMessage(msg.source, envMsgId);
-        if (saved) {
-          // Mark as \Seen so we never re-process on next UNSEEN search
-          await this.client!.messageFlagsAdd(msg.uid.toString(), ["\\Seen"], { uid: true });
-        }
+        if (saved) toMark.push(msg.uid.toString());
       } catch (e) {
         console.error("[IMAP] Failed to save message UID", msg.uid, ":", (e as Error).message);
+      }
+    }
+
+    // Batch-mark as Seen after the fetch loop completes
+    if (toMark.length > 0 && this.client) {
+      try {
+        await this.client.messageFlagsAdd(toMark.join(","), ["\\Seen"], { uid: true });
+      } catch {
+        // Non-fatal: Seen flag is cosmetic — dedup by messageId is the real guard
       }
     }
   }
