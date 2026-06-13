@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -18,6 +18,7 @@ import {
   Zap,
   Inbox,
   GraduationCap,
+  LogOut,
 } from "lucide-react";
 
 const navItems = [
@@ -35,8 +36,10 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [inboxUnread, setInboxUnread] = useState(0);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   // Fetch unread count on mount + every 30 s
   useEffect(() => {
@@ -53,6 +56,17 @@ export function Sidebar() {
     const t = setInterval(load, 30_000);
     return () => clearInterval(t);
   }, []);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.push("/login");
+      router.refresh();
+    } catch {
+      setLoggingOut(false);
+    }
+  };
 
   return (
     <aside
@@ -113,15 +127,35 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Worker Status */}
+      {/* Worker Status + Logout */}
       {!collapsed && (
-        <div className="absolute bottom-4 left-3 right-3">
+        <div className="absolute bottom-4 left-3 right-3 space-y-2">
           <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--accent)/0.5)] p-3">
             <div className="flex items-center gap-2">
               <span className="status-dot active" />
               <span className="text-xs text-[hsl(var(--muted-foreground))]">Worker Active</span>
             </div>
           </div>
+          <button
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="flex w-full items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-red-400 hover:bg-red-500/20 transition-colors disabled:opacity-50"
+          >
+            <LogOut className="h-4 w-4" />
+            <span className="text-xs font-medium">{loggingOut ? "Logging out..." : "Logout"}</span>
+          </button>
+        </div>
+      )}
+      {collapsed && (
+        <div className="absolute bottom-4 left-3 right-3">
+          <button
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="flex w-full items-center justify-center rounded-lg border border-red-500/20 bg-red-500/10 p-2 text-red-400 hover:bg-red-500/20 transition-colors disabled:opacity-50"
+            title="Logout"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
         </div>
       )}
     </aside>
