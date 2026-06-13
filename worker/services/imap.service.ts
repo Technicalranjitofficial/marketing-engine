@@ -129,24 +129,32 @@ class ImapIdleService {
       { source: true, envelope: true, flags: true },
       { uid: true }
     )) {
+      const envMsgId = msg.envelope?.messageId;
+      const envSubject = msg.envelope?.subject;
+      console.log(`[IMAP] Processing UID ${msg.uid}: "${envSubject}" msgId=${envMsgId}`);
       try {
-        await this.saveMessage(msg.source, msg.envelope?.messageId);
-        // Mark as \Seen so we never re-process on next UNSEEN search
-        await this.client!.messageFlagsAdd(msg.uid.toString(), ["\\Seen"], { uid: true });
+        const saved = await this.saveMessage(msg.source, envMsgId);
+        if (saved) {
+          // Mark as \Seen so we never re-process on next UNSEEN search
+          await this.client!.messageFlagsAdd(msg.uid.toString(), ["\\Seen"], { uid: true });
+        }
       } catch (e) {
-        console.error("[IMAP] Failed to save message:", (e as Error).message);
+        console.error("[IMAP] Failed to save message UID", msg.uid, ":", (e as Error).message);
       }
     }
   }
 
-  private async saveMessage(source: Buffer, envelopeMessageId?: string) {
+  private async saveMessage(source: Buffer, envelopeMessageId?: string): Promise<boolean> {
     const parsed = await simpleParser(source);
     const msgId  = parsed.messageId ?? envelopeMessageId ?? null;
 
     // Deduplication — messageId is unique in DB
     if (msgId) {
       const existing = await prisma.inboundEmail.findUnique({ where: { messageId: msgId } });
-      if (existing) return;
+      if (existing) {
+        console.log(`[IMAP] Skipped (duplicate): ${msgId}`);
+        return false;
+      }
     }
 
     const from = parsed.from?.value[0];
@@ -175,6 +183,7 @@ class ImapIdleService {
     });
 
     console.log(`[IMAP] ✓ Saved: "${parsed.subject}" from ${from?.address}`);
+    return true;
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
