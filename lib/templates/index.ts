@@ -63,23 +63,19 @@ ${body}
 
 <!-- Footer -->
 <tr>
-  <td style="padding:32px 30px;background-color:#050A15 !important;border-top:1px solid rgba(6,214,255,0.10);" bgcolor="#050A15">
+  <td class="kc-cell" bgcolor="#050A15" style="padding:32px 30px;background-color:#050A15 !important;border-top:1px solid rgba(6,214,255,0.10);">
     <!-- Logo row -->
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
       <tr>
-        <td align="center" style="padding-bottom:16px;">
-          <table role="presentation" cellpadding="0" cellspacing="0">
-            <tr>
-              <td style="width:28px;height:28px;background:rgba(6,214,255,0.08);border:1px solid rgba(6,214,255,0.35);border-radius:7px;text-align:center;vertical-align:middle;">
-                <span style="color:#06D6FF;font-size:12px;font-weight:900;letter-spacing:-0.5px;">KC</span>
-              </td>
-              <td style="padding-left:8px;color:#06D6FF;font-size:14px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;">KIIT CONNECT</td>
-            </tr>
-          </table>
+        <td align="center" bgcolor="#050A15" style="padding-bottom:16px;background-color:#050A15 !important;">
+          <a href="https://kiitconnect.com" style="text-decoration:none;">
+            <img src="https://raw.githubusercontent.com/ranjitdasofficial/rdserver/main/Premium/1704973749103_im.png" alt="KIIT Connect" width="48" height="48" style="border-radius:12px;display:block;margin:0 auto 10px;">
+            <span style="color:#06D6FF;font-size:14px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;">KIIT CONNECT</span>
+          </a>
         </td>
       </tr>
       <tr>
-        <td align="center">
+        <td align="center" bgcolor="#050A15" style="background-color:#050A15 !important;">
           <p style="margin:0 0 6px;color:#7AAFC8;font-size:12px;">The #1 student platform for KIIT University</p>
           <p style="margin:0 0 16px;color:#4A6580;font-size:11px;">
             <a href="https://kiitconnect.com/academic" style="color:#4A6580;text-decoration:none;">Academic</a> &nbsp;·&nbsp;
