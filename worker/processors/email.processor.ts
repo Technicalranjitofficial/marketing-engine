@@ -75,7 +75,10 @@ export function createEmailWorker() {
         // Update campaign stats and check completion
         const updatedCampaign = await prisma.campaign.update({
           where: { id: campaignId },
-          data: { totalSent: { increment: 1 } },
+          data: {
+            totalSent: { increment: 1 },
+            totalDelivered: { increment: 1 }, // successful SMTP send = delivered
+          },
         });
 
         // Flip campaign to SENT if all recipients have been sent to
