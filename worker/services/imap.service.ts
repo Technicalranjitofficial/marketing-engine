@@ -1,6 +1,8 @@
 import { ImapFlow } from "imapflow";
 import { simpleParser } from "mailparser";
-import prisma from "@/lib/db";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 // ─────────────────────────────────────────────────────────────────────────────
 // IMAP IDLE Service
