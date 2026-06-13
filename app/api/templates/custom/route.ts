@@ -6,8 +6,11 @@ export async function POST(req: NextRequest) {
   try {
     const { name, html, blocks, description, category } = await req.json();
 
-    if (!name || !html) {
-      return NextResponse.json({ error: "Name and HTML are required" }, { status: 400 });
+    if (!name?.trim()) {
+      return NextResponse.json({ error: "Template name is required" }, { status: 400 });
+    }
+    if (!html?.trim() || html.trim().length < 20) {
+      return NextResponse.json({ error: "Valid HTML content is required" }, { status: 400 });
     }
 
     // Create or update template

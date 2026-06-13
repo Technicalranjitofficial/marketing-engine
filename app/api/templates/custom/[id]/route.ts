@@ -44,8 +44,11 @@ export async function PUT(
     const { id } = await params;
     const { name, html, blocks, description } = await req.json();
 
-    if (!name || !html) {
-      return NextResponse.json({ error: "Name and HTML are required" }, { status: 400 });
+    if (!name?.trim()) {
+      return NextResponse.json({ error: "Template name is required" }, { status: 400 });
+    }
+    if (!html?.trim() || html.trim().length < 20) {
+      return NextResponse.json({ error: "Valid HTML content is required" }, { status: 400 });
     }
 
     const template = await prisma.emailTemplate.update({

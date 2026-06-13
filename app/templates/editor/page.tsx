@@ -847,9 +847,18 @@ function TemplateEditor() {
       toast.error("Please enter a template name");
       return;
     }
+    if (blocks.length === 0) {
+      toast.error("Please add at least one block to your template");
+      return;
+    }
     setSaving(true);
     try {
       const html = generateEmailHtml(blocks, templateName);
+      if (!html || html.length < 100) {
+        toast.error("Template content is too short");
+        setSaving(false);
+        return;
+      }
       const url = isEditing && editId 
         ? `/api/templates/custom/${editId}` 
         : "/api/templates/custom";

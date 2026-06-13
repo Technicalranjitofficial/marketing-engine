@@ -94,9 +94,28 @@ export default function ContactsPage() {
   }, [page, search, statusFilter]);
 
   const fetchLists = async () => {
-    const [lr, tr] = await Promise.all([fetch("/api/lists"), fetch("/api/templates")]);
+    const [lr, tr, cr] = await Promise.all([
+      fetch("/api/lists"),
+      fetch("/api/templates"),
+      fetch("/api/templates/custom")
+    ]);
     if (lr.ok) { const d = await lr.json(); setLists(d.lists || []); }
-    if (tr.ok) { const d = await tr.json(); setTemplates(d.templates || []); }
+    const allTemplates: Template[] = [];
+    if (tr.ok) { const d = await tr.json(); allTemplates.push(...(d.templates || [])); }
+    if (cr.ok) { 
+      const customTemplates = await cr.json();
+      // Map custom templates to match Template interface
+      const mapped = (Array.isArray(customTemplates) ? customTemplates : []).map((t: { id: string; name: string; description?: string; thumbnail?: string }) => ({
+        id: t.id,
+        name: t.name,
+        description: t.description || "Custom template",
+        category: "Custom",
+        previewText: t.name,
+        thumbnail: t.thumbnail || "🎨",
+      }));
+      allTemplates.push(...mapped);
+    }
+    setTemplates(allTemplates);
   };
 
   useEffect(() => { fetchLists(); }, []);

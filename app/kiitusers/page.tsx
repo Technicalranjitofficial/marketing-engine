@@ -111,11 +111,25 @@ export default function KIITUsersPage() {
   const openModal = async () => {
     if (selected.size === 0) { toast.error("Select at least one user"); return; }
     try {
-      const res = await fetch("/api/templates");
-      if (res.ok) {
-        const data = await res.json();
-        setTemplates(Array.isArray(data) ? data : (data.templates ?? []));
+      const [tr, cr] = await Promise.all([
+        fetch("/api/templates"),
+        fetch("/api/templates/custom")
+      ]);
+      const allTemplates: TemplateItem[] = [];
+      if (tr.ok) {
+        const data = await tr.json();
+        allTemplates.push(...(Array.isArray(data) ? data : (data.templates ?? [])));
       }
+      if (cr.ok) {
+        const customTemplates = await cr.json();
+        const mapped = (Array.isArray(customTemplates) ? customTemplates : []).map((t: { id: string; name: string; description?: string }) => ({
+          id: t.id,
+          name: t.name,
+          category: "Custom",
+        }));
+        allTemplates.push(...mapped);
+      }
+      setTemplates(allTemplates);
     } catch { /* ignore */ }
     setShowModal(true);
   };

@@ -1,7 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { renderTemplate } from "@/lib/templates";
+import { renderTemplate, getTemplateById } from "@/lib/templates";
 import { queueDirectEmail } from "@/lib/queue";
+
+// Helper to render custom templates from database
+async function renderCustomTemplate(templateId: string, vars: Record<string, string>): Promise<string | null> {
+  const customTemplate = await prisma.emailTemplate.findUnique({
+    where: { id: templateId },
+    select: { htmlContent: true },
+  });
+  if (!customTemplate?.htmlContent) return null;
+  
+  // Replace all template variables
+  let html = customTemplate.htmlContent;
+  for (const [key, value] of Object.entries(vars)) {
+    html = html.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
+  }
+  return html;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/kiitusers/send-bulk
@@ -50,6 +66,20 @@ export async function POST(req: NextRequest) {
     if (!users?.length)  return NextResponse.json({ error: "users[] is required" }, { status: 400 });
     if (!subject)        return NextResponse.json({ error: "subject is required" },  { status: 400 });
     if (!templateId)     return NextResponse.json({ error: "templateId is required" }, { status: 400 });
+
+    // Check if template exists (hardcoded or custom)
+    const isHardcodedTemplate = !!getTemplateById(templateId);
+    let customTemplateHtml: string | null = null;
+    if (!isHardcodedTemplate) {
+      const customTemplate = await prisma.emailTemplate.findUnique({
+        where: { id: templateId },
+        select: { htmlContent: true },
+      });
+      if (!customTemplate?.htmlContent) {
+        return NextResponse.json({ error: "Template not found" }, { status: 404 });
+      }
+      customTemplateHtml = customTemplate.htmlContent;
+    }
 
     // Create a single campaign for the whole batch
     const campaign = await prisma.campaign.create({
@@ -116,7 +146,18 @@ export async function POST(req: NextRequest) {
           email,
           unsubscribeUrl,
         };
-        const rendered = renderTemplate(templateId, vars);
+        
+        // Use hardcoded template or custom template
+        let rendered: string;
+        if (isHardcodedTemplate) {
+          rendered = renderTemplate(templateId, vars);
+        } else {
+          // Replace variables in custom template HTML
+          rendered = customTemplateHtml!;
+          for (const [key, value] of Object.entries(vars)) {
+            rendered = rendered.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
+          }
+        }
 
         // Store trackingId on the email record
         await prisma.email.update({

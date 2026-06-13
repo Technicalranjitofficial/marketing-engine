@@ -1,6 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { renderTemplate } from "@/lib/templates";
+import { renderTemplate, getTemplateById } from "@/lib/templates";
+
+// Helper to render custom templates from database
+async function renderCustomTemplate(templateId: string, vars: Record<string, string>): Promise<string | null> {
+  const customTemplate = await prisma.emailTemplate.findUnique({
+    where: { id: templateId },
+    select: { htmlContent: true },
+  });
+  if (!customTemplate?.htmlContent) return null;
+  
+  // Replace all template variables
+  let html = customTemplate.htmlContent;
+  for (const [key, value] of Object.entries(vars)) {
+    html = html.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
+  }
+  return html;
+}
 
 // POST /api/send-direct - Send an email to a single contact immediately via the worker queue
 export async function POST(request: NextRequest) {
@@ -63,7 +79,20 @@ export async function POST(request: NextRequest) {
         unsubscribeUrl,
         ...templateVars,
       };
-      html = renderTemplate(templateId, vars);
+      
+      // First try hardcoded template, then custom template from database
+      const hardcodedTemplate = getTemplateById(templateId);
+      if (hardcodedTemplate) {
+        html = renderTemplate(templateId, vars);
+      } else {
+        const customHtml = await renderCustomTemplate(templateId, vars);
+        if (!customHtml) {
+          // Clean up the campaign we created
+          await prisma.campaign.delete({ where: { id: campaign.id } });
+          return NextResponse.json({ error: "Template not found" }, { status: 404 });
+        }
+        html = customHtml;
+      }
     } else {
       // Replace personalisation tags in raw HTML
       html = (htmlContent as string)
