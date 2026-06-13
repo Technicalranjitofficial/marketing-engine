@@ -42,14 +42,9 @@ async function handleTrackEvent(data: TrackEventJob) {
   console.log(`[AnalyticsWorker] Processing ${eventType} event for ${trackingId}`);
 
   // Find the email by tracking ID (stored in headers)
-  // For now, we'll use a lookup table or the messageId
-  const email = await prisma.email.findFirst({
-    where: {
-      OR: [
-        { messageId: { contains: trackingId } },
-        // Additional lookup strategies can be added
-      ],
-    },
+  // Look up by dedicated trackingId field (set at send time)
+  const email = await prisma.email.findUnique({
+    where: { trackingId },
     include: { campaign: true },
   });
 

@@ -72,13 +72,23 @@ export function createEmailWorker() {
           },
         });
 
-        // Update campaign stats
-        await prisma.campaign.update({
+        // Update campaign stats and check completion
+        const updatedCampaign = await prisma.campaign.update({
           where: { id: campaignId },
-          data: {
-            totalSent: { increment: 1 },
-          },
+          data: { totalSent: { increment: 1 } },
         });
+
+        // Flip campaign to SENT if all recipients have been sent to
+        if (
+          updatedCampaign.totalRecipients > 0 &&
+          updatedCampaign.totalSent >= updatedCampaign.totalRecipients
+        ) {
+          await prisma.campaign.update({
+            where: { id: campaignId },
+            data: { status: "SENT", sentAt: new Date() },
+          });
+          console.log(`[EmailWorker] Campaign ${campaignId} fully sent — marked SENT`);
+        }
 
         console.log(`[EmailWorker] Successfully sent to ${to}, messageId: ${result.messageId}`);
         return { success: true, messageId: result.messageId };

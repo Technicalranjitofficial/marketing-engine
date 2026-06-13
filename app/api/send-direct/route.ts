@@ -83,6 +83,7 @@ export async function POST(request: NextRequest) {
       data: {
         campaignId: campaign.id,
         contactId: contact.id,
+        trackingId,
         status: "QUEUED",
       },
     });

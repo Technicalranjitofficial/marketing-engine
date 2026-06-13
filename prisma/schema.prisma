@@ -181,6 +181,7 @@ model Email {
   contactId   String
   
   // Tracking
+  trackingId  String?     @unique
   messageId   String?     @unique
   status      EmailStatus @default(QUEUED)
   
@@ -200,6 +201,7 @@ model Email {
   events      EmailEvent[]
   
   @@index([campaignId])
+  @@index([trackingId])
   @@index([status])
   @@index([messageId])
 }

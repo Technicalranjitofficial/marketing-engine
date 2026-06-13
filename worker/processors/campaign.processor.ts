@@ -196,6 +196,7 @@ async function handleProcessBatch(data: ProcessBatchJob) {
       data: {
         campaignId,
         contactId: contact.id,
+        trackingId,
         status: "QUEUED",
       },
     });
