@@ -36,17 +36,25 @@ const base = (body: string, accentColor = "#06D6FF") => `<!DOCTYPE html>
     -ms-text-size-adjust: 100%;
   }
   table { border-collapse: collapse !important; }
+  /* Gmail dark mode override — u+ targets Gmail's wrapper div */
+  u + .body { background-color: #050A15 !important; }
+  u + .body .kc-container { background-color: #080E1E !important; }
+  u + .body .kc-cell { background-color: #080E1E !important; }
+  /* Outlook.com override */
+  #MessageViewBody, #MessageWebViewDiv { background-color: #050A15 !important; }
   @media (prefers-color-scheme: dark) {
-    body, table { background-color: #050A15 !important; }
+    body, table, td { background-color: #050A15 !important; }
+    .kc-container { background-color: #080E1E !important; }
+    .kc-cell { background-color: #080E1E !important; }
   }
 </style>
 </head>
-<body bgcolor="#050A15" style="margin:0;padding:0;background-color:#050A15 !important;font-family:'Segoe UI',system-ui,-apple-system,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+<body class="body" bgcolor="#050A15" style="margin:0;padding:0;background-color:#050A15 !important;font-family:'Segoe UI',system-ui,-apple-system,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#050A15" style="background-color:#050A15 !important;">
-<tr><td align="center" style="padding:40px 16px;background-color:#050A15;">
+<tr><td align="center" bgcolor="#050A15" style="padding:40px 16px;background-color:#050A15 !important;">
 
 <!-- Container -->
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" bgcolor="#080E1E" style="max-width:600px;width:100%;border-radius:16px;overflow:hidden;border:1px solid rgba(6,214,255,0.15);background-color:#080E1E !important;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" bgcolor="#080E1E" class="kc-container" style="max-width:600px;width:100%;border-radius:16px;overflow:hidden;border:1px solid rgba(6,214,255,0.15);background-color:#080E1E !important;">
 
 <!-- Top accent bar -->
 <tr><td style="height:3px;background:linear-gradient(90deg,#06D6FF,#9333EA,#06D6FF);"></td></tr>
@@ -126,7 +134,7 @@ export const welcomeTemplate: EmailTemplate = {
   </td>
 </tr>
 <tr>
-  <td style="padding:32px 30px;">
+  <td class="kc-cell" bgcolor="#080E1E" style="padding:32px 30px;background-color:#080E1E !important;">
     <p style="margin:0 0 24px;color:#A8C8E0;font-size:15px;line-height:1.7;">
       Hey <strong style="color:#C8DCF0;">${v.firstName || "there"}</strong>,<br/><br/>
       We're excited to have you on KIIT Connect! You now have access to free PYQs, class notes, the SGPA calculator, faculty reviews, AI chatbot, and a growing community of KIITians.
@@ -192,7 +200,7 @@ export const premiumTemplate: EmailTemplate = {
   </td>
 </tr>
 <tr>
-  <td style="padding:32px 30px;">
+  <td class="kc-cell" bgcolor="#080E1E" style="padding:32px 30px;background-color:#080E1E !important;">
     <p style="margin:0 0 20px;color:#A8C8E0;font-size:15px;line-height:1.7;">
       Hi <strong style="color:#C8DCF0;">${v.firstName || "there"}</strong>,<br/><br/>
       We've handpicked a select group of KIITians for early access to something we've been building for a while. You're on that list.
@@ -243,7 +251,7 @@ export const newsletterTemplate: EmailTemplate = {
   </td>
 </tr>
 <tr>
-  <td style="padding:24px 30px 32px;">
+  <td class="kc-cell" bgcolor="#080E1E" style="padding:24px 30px 32px;background-color:#080E1E !important;">
     <p style="margin:0 0 24px;color:#A8C8E0;font-size:15px;line-height:1.7;">
       Hey ${v.firstName || "KIITian"} 👋<br/><br/>
       Here's your weekly roundup of everything happening on KIIT Connect.
@@ -308,7 +316,7 @@ export const promoTemplate: EmailTemplate = {
   </td>
 </tr>
 <tr>
-  <td style="padding:32px 30px;">
+  <td class="kc-cell" bgcolor="#080E1E" style="padding:32px 30px;background-color:#080E1E !important;">
     <p style="margin:0 0 24px;color:#A8C8E0;font-size:15px;line-height:1.7;">
       Hey <strong style="color:#C8DCF0;">${v.firstName || "KIITian"}</strong>,<br/><br/>
       We've been working on something special, and you get first access. This offer is only available to a limited number of students — and you're one of them.
@@ -345,14 +353,14 @@ export const reengagementTemplate: EmailTemplate = {
   thumbnail: "🔁",
   html: (v = {}) => base(`
 <tr>
-  <td style="padding:48px 30px 32px;text-align:center;">
+  <td class="kc-cell" bgcolor="#080E1E" style="padding:48px 30px 32px;text-align:center;background-color:#080E1E !important;">
     <div style="font-size:52px;margin-bottom:16px;">🔁</div>
     <h1 style="margin:0 0 8px;color:#C8DCF0;font-size:26px;font-weight:800;">We Miss You, ${v.firstName || "KIITian"}</h1>
     <p style="margin:0;color:#7AAFC8;font-size:15px;">KIIT Connect has changed. A lot.</p>
   </td>
 </tr>
 <tr>
-  <td style="padding:0 30px 32px;">
+  <td class="kc-cell" bgcolor="#080E1E" style="padding:0 30px 32px;background-color:#080E1E !important;">
     <p style="margin:0 0 24px;color:#A8C8E0;font-size:15px;line-height:1.7;">
       We noticed you haven't visited in a while. Since you left, we've added a ton of new features and resources just for KIITians like you.
     </p>
@@ -399,7 +407,7 @@ export const eventTemplate: EmailTemplate = {
   </td>
 </tr>
 <tr>
-  <td style="padding:32px 30px;">
+  <td class="kc-cell" bgcolor="#080E1E" style="padding:32px 30px;background-color:#080E1E !important;">
     <p style="margin:0 0 24px;color:#A8C8E0;font-size:15px;line-height:1.7;">
       Hey <strong style="color:#C8DCF0;">${v.firstName || "KIITian"}</strong>,<br/><br/>
       We're hosting an exclusive event for the KIIT Connect community. Spots are limited and we'd love to see you there.
@@ -439,14 +447,14 @@ export const transactionalTemplate: EmailTemplate = {
   thumbnail: "🔐",
   html: (v = {}) => base(`
 <tr>
-  <td style="padding:40px 30px;text-align:center;">
+  <td class="kc-cell" bgcolor="#080E1E" style="padding:40px 30px;text-align:center;background-color:#080E1E !important;">
     <div style="display:inline-block;width:60px;height:60px;background:rgba(6,214,255,0.08);border:1px solid rgba(6,214,255,0.3);border-radius:14px;line-height:60px;font-size:28px;margin-bottom:20px;">🔐</div>
     <h1 style="margin:0 0 8px;color:#C8DCF0;font-size:22px;font-weight:800;">${v.headline || "Account Notification"}</h1>
     <p style="margin:0;color:#7AAFC8;font-size:14px;">KIIT Connect Security</p>
   </td>
 </tr>
 <tr>
-  <td style="padding:0 30px 32px;">
+  <td class="kc-cell" bgcolor="#080E1E" style="padding:0 30px 32px;background-color:#080E1E !important;">
     <p style="margin:0 0 20px;color:#A8C8E0;font-size:15px;line-height:1.7;">
       Hi <strong style="color:#C8DCF0;">${v.firstName || "there"}</strong>,<br/><br/>
       ${v.message || "A security action was requested on your KIIT Connect account. Use the code below to proceed."}
@@ -502,7 +510,7 @@ export const launchTemplate: EmailTemplate = {
   </td>
 </tr>
 <tr>
-  <td style="padding:32px 30px;">
+  <td class="kc-cell" bgcolor="#080E1E" style="padding:32px 30px;background-color:#080E1E !important;">
     <p style="margin:0 0 24px;color:#A8C8E0;font-size:15px;line-height:1.7;">
       Hey <strong style="color:#C8DCF0;">${v.firstName || "KIITian"}</strong>,<br/><br/>
       We've been quietly building something new and it's finally here. This is one of the most requested features from the community — and we think you're going to love it.
