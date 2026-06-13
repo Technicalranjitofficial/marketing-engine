@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Sidebar, Header } from "@/components/layout/Sidebar";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Badge } from "@/components/ui/Table";
@@ -243,6 +244,11 @@ export default function CampaignsPage() {
                           <TableCell className="text-right"><Badge variant="success">{cr}%</Badge></TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
+                              <Link href={`/campaigns/${c.id}`}>
+                                <Button size="sm" variant="ghost" leftIcon={<Eye className="h-3.5 w-3.5" />}>
+                                  View
+                                </Button>
+                              </Link>
                               {(c.status === "DRAFT" || c.status === "SCHEDULED") && (
                                 <Button
                                   size="sm"
