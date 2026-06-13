@@ -17,18 +17,20 @@ import {
   ChevronRight,
   Zap,
   Inbox,
+  GraduationCap,
 } from "lucide-react";
 
 const navItems = [
-  { href: "/",           icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/inbox",      icon: Inbox,           label: "Inbox",     badge: "inbox" as const },
-  { href: "/campaigns",  icon: Mail,            label: "Campaigns" },
-  { href: "/contacts",   icon: Users,           label: "Contacts" },
-  { href: "/lists",      icon: ListTree,        label: "Lists" },
-  { href: "/automations",icon: Workflow,        label: "Automations" },
-  { href: "/templates",  icon: FileText,        label: "Templates" },
-  { href: "/analytics",  icon: BarChart3,       label: "Analytics" },
-  { href: "/settings",   icon: Settings,        label: "Settings" },
+  { href: "/",            icon: LayoutDashboard, label: "Dashboard"       },
+  { href: "/inbox",       icon: Inbox,           label: "Inbox",   badge: "inbox" as const },
+  { href: "/campaigns",   icon: Mail,            label: "Campaigns"       },
+  { href: "/contacts",    icon: Users,           label: "Contacts"        },
+  { href: "/kiitusers",   icon: GraduationCap,   label: "KIIT Users"      },
+  { href: "/lists",       icon: ListTree,        label: "Lists"           },
+  { href: "/automations", icon: Workflow,        label: "Automations"     },
+  { href: "/templates",   icon: FileText,        label: "Templates"       },
+  { href: "/analytics",   icon: BarChart3,       label: "Analytics"       },
+  { href: "/settings",    icon: Settings,        label: "Settings"        },
 ];
 
 export function Sidebar() {

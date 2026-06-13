@@ -58,6 +58,7 @@ services:
       - DKIM_SELECTOR=${DKIM_SELECTOR:-mail}
       - DEFAULT_FROM_NAME=${DEFAULT_FROM_NAME:-Marketing Engine}
       - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL:-noreply@kiitconnect.com}
+      - KIIT_API_URL=${KIIT_API_URL:-http://172.22.0.1:4006}
     depends_on:
       postgres:
         condition: service_healthy
