@@ -50,11 +50,24 @@ class EmailService {
 
     console.log(`[EmailService] Connecting to SMTP: ${host}:${port}`);
 
+    // DKIM configuration (optional)
+    const dkimPrivateKey = process.env.DKIM_PRIVATE_KEY?.replace(/\\n/g, "\n");
+    const dkimDomain = process.env.DKIM_DOMAIN || "kiitconnect.com";
+    const dkimSelector = process.env.DKIM_SELECTOR || "mail";
+    const dkim = dkimPrivateKey
+      ? { domainName: dkimDomain, keySelector: dkimSelector, privateKey: dkimPrivateKey }
+      : undefined;
+
+    if (dkim) {
+      console.log(`[EmailService] DKIM signing enabled: ${dkimSelector}._domainkey.${dkimDomain}`);
+    }
+
     this.transporter = nodemailer.createTransport({
       host,
       port,
       secure,
       auth: user ? { user, pass } : undefined,
+      dkim,
       // Connection pool for high performance
       pool: true,
       maxConnections: 10,
@@ -127,7 +140,7 @@ class EmailService {
         headers: {
           "X-Tracking-ID": payload.trackingId,
           "X-Campaign-ID": payload.headers?.["X-Campaign-ID"] || "",
-          "List-Unsubscribe": `<${baseUrl}/api/unsubscribe/${payload.trackingId}>`,
+          "List-Unsubscribe": `<${baseUrl}/api/unsubscribe/${payload.trackingId}>, <mailto:unsubscribe@kiitconnect.com?subject=Unsubscribe>`,
           "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
           ...payload.headers,
         },

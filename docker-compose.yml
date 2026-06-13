@@ -53,6 +53,9 @@ services:
       - SMTP_SECURE=${SMTP_SECURE:-false}
       - SMTP_USER=${SMTP_USER:-}
       - SMTP_PASS=${SMTP_PASS:-}
+      - DKIM_PRIVATE_KEY=${DKIM_PRIVATE_KEY:-}
+      - DKIM_DOMAIN=${DKIM_DOMAIN:-kiitconnect.com}
+      - DKIM_SELECTOR=${DKIM_SELECTOR:-mail}
       - DEFAULT_FROM_NAME=${DEFAULT_FROM_NAME:-Marketing Engine}
       - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL:-noreply@kiitconnect.com}
     depends_on:
@@ -80,6 +83,9 @@ services:
       - SMTP_SECURE=${SMTP_SECURE:-false}
       - SMTP_USER=${SMTP_USER:-}
       - SMTP_PASS=${SMTP_PASS:-}
+      - DKIM_PRIVATE_KEY=${DKIM_PRIVATE_KEY:-}
+      - DKIM_DOMAIN=${DKIM_DOMAIN:-kiitconnect.com}
+      - DKIM_SELECTOR=${DKIM_SELECTOR:-mail}
       - SMTP_RATE_LIMIT=${SMTP_RATE_LIMIT:-50}
       - SMTP_DAILY_LIMIT=${SMTP_DAILY_LIMIT:-100000}
       - DEFAULT_FROM_NAME=${DEFAULT_FROM_NAME:-Marketing Engine}
