@@ -19,18 +19,34 @@ export interface EmailTemplate {
 // ─── Shared base ─────────────────────────────────────────────
 
 const base = (body: string, accentColor = "#06D6FF") => `<!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:v="urn:schemas-microsoft-com:vml">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="color-scheme" content="dark"/>
+<meta name="supported-color-schemes" content="dark"/>
 <title>KIIT Connect</title>
+<style>
+  :root { color-scheme: dark; }
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: #050A15 !important;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+  table { border-collapse: collapse !important; }
+  @media (prefers-color-scheme: dark) {
+    body, table { background-color: #050A15 !important; }
+  }
+</style>
 </head>
-<body style="margin:0;padding:0;background:#050A15;font-family:'Segoe UI',system-ui,-apple-system,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#050A15;">
-<tr><td align="center" style="padding:40px 16px;">
+<body bgcolor="#050A15" style="margin:0;padding:0;background-color:#050A15 !important;font-family:'Segoe UI',system-ui,-apple-system,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#050A15" style="background-color:#050A15 !important;">
+<tr><td align="center" style="padding:40px 16px;background-color:#050A15;">
 
 <!-- Container -->
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;border-radius:16px;overflow:hidden;border:1px solid rgba(6,214,255,0.15);background:#080E1E;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" bgcolor="#080E1E" style="max-width:600px;width:100%;border-radius:16px;overflow:hidden;border:1px solid rgba(6,214,255,0.15);background-color:#080E1E !important;">
 
 <!-- Top accent bar -->
 <tr><td style="height:3px;background:linear-gradient(90deg,#06D6FF,#9333EA,#06D6FF);"></td></tr>
@@ -39,7 +55,7 @@ ${body}
 
 <!-- Footer -->
 <tr>
-  <td style="padding:32px 30px;background:#050A15;border-top:1px solid rgba(6,214,255,0.10);">
+  <td style="padding:32px 30px;background-color:#050A15 !important;border-top:1px solid rgba(6,214,255,0.10);" bgcolor="#050A15">
     <!-- Logo row -->
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
       <tr>
