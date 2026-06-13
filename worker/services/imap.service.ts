@@ -83,12 +83,27 @@ class ImapIdleService {
       // Deduplication by messageId prevents double-saves.
       await this.processRecent();
 
-      // IMAP IDLE loop: idle() blocks until server sends EXISTS/EXPUNGE or
-      // 29 min elapses (imapflow auto-refreshes the IDLE at 29-min boundary).
+      // Hybrid approach: IDLE with periodic polling fallback
+      // Some mail servers don't properly push IDLE notifications
       while (this.running) {
-        await this.client.idle();
+        // Poll for new messages every 30 seconds as a fallback
+        const pollInterval = setInterval(async () => {
+          if (this.running && this.client) {
+            try {
+              await this.processUnseen();
+            } catch { /* ignore poll errors, IDLE will handle reconnect */ }
+          }
+        }, 30_000);
+
+        try {
+          // IDLE still used for instant notifications on servers that support it
+          await this.client.idle();
+        } finally {
+          clearInterval(pollInterval);
+        }
+        
         if (!this.running) break;
-        // On wakeup only fetch UNSEEN to avoid reprocessing everything
+        // On wakeup (either from IDLE notification or timeout) fetch UNSEEN
         await this.processUnseen();
       }
     } finally {
