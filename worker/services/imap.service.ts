@@ -78,15 +78,17 @@ class ImapIdleService {
 
     const lock = await this.client.getMailboxLock("INBOX");
     try {
-      // Catch up on any messages that arrived while offline
-      await this.processUnseen();
+      // On first connect: sweep all messages from the last 30 days regardless
+      // of Seen flag (catches emails read via webmail before worker started).
+      // Deduplication by messageId prevents double-saves.
+      await this.processRecent();
 
-      // IMAP IDLE loop:
-      //   idle() blocks until the server sends EXISTS/EXPUNGE, or 29 min elapses
-      //   (imapflow sends DONE + re-IDLEs automatically at the 29-min boundary)
+      // IMAP IDLE loop: idle() blocks until server sends EXISTS/EXPUNGE or
+      // 29 min elapses (imapflow auto-refreshes the IDLE at 29-min boundary).
       while (this.running) {
         await this.client.idle();
         if (!this.running) break;
+        // On wakeup only fetch UNSEEN to avoid reprocessing everything
         await this.processUnseen();
       }
     } finally {
@@ -99,14 +101,29 @@ class ImapIdleService {
 
   // ── Message processing ─────────────────────────────────────────────────────
 
+  /** Initial sweep: all messages from the last 30 days (ignores Seen flag).
+   *  Deduplication by messageId means already-saved emails are skipped safely. */
+  private async processRecent() {
+    if (!this.client) return;
+    const since = new Date();
+    since.setDate(since.getDate() - 30);
+    const uids = await this.client.search({ since }, { uid: true });
+    if (uids.length === 0) { console.log("[IMAP] No recent messages on first sweep"); return; }
+    console.log(`[IMAP] Initial sweep: ${uids.length} message(s) in the last 30 days`);
+    await this.fetchAndSave(uids);
+  }
+
+  /** Wakeup fetch: only UNSEEN (new arrivals since last IDLE). */
   private async processUnseen() {
     if (!this.client) return;
-
     const uids = await this.client.search({ unseen: true }, { uid: true });
     if (uids.length === 0) return;
-
     console.log(`[IMAP] ${uids.length} unseen message(s) to process`);
+    await this.fetchAndSave(uids);
+  }
 
+  private async fetchAndSave(uids: number[]) {
+    if (!this.client || uids.length === 0) return;
     for await (const msg of this.client.fetch(
       uids,
       { source: true, envelope: true, flags: true },
@@ -114,7 +131,7 @@ class ImapIdleService {
     )) {
       try {
         await this.saveMessage(msg.source, msg.envelope?.messageId);
-        // Mark as \Seen on the server so we never re-process it
+        // Mark as \Seen so we never re-process on next UNSEEN search
         await this.client!.messageFlagsAdd(msg.uid.toString(), ["\\Seen"], { uid: true });
       } catch (e) {
         console.error("[IMAP] Failed to save message:", (e as Error).message);
