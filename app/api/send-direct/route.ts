@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       contactId,
+      toEmail,
       subject,
       fromName,
       fromEmail,
@@ -33,18 +34,43 @@ export async function POST(request: NextRequest) {
       htmlContent,
     } = body;
 
-    if (!contactId || !subject || !fromEmail) {
+    if (!subject || !fromEmail) {
       return NextResponse.json(
-        { error: "contactId, subject, and fromEmail are required" },
+        { error: "subject and fromEmail are required" },
         { status: 400 }
       );
     }
 
-    // Get contact
-    const contact = await prisma.contact.findUnique({ where: { id: contactId } });
-    if (!contact) return NextResponse.json({ error: "Contact not found" }, { status: 404 });
-    if (contact.status !== "ACTIVE") {
-      return NextResponse.json({ error: `Contact status is ${contact.status} — cannot send` }, { status: 400 });
+    if (!contactId && !toEmail) {
+      return NextResponse.json(
+        { error: "contactId or toEmail is required" },
+        { status: 400 }
+      );
+    }
+
+    let contact;
+    let recipientEmail: string;
+
+    if (contactId) {
+      // Get contact by ID
+      contact = await prisma.contact.findUnique({ where: { id: contactId } });
+      if (!contact) return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+      if (contact.status !== "ACTIVE") {
+        return NextResponse.json({ error: `Contact status is ${contact.status} — cannot send` }, { status: 400 });
+      }
+      recipientEmail = contact.email;
+    } else {
+      // Direct email - create or find contact
+      recipientEmail = toEmail.toLowerCase().trim();
+      contact = await prisma.contact.upsert({
+        where: { email: recipientEmail },
+        update: { updatedAt: new Date() },
+        create: {
+          email: recipientEmail,
+          status: "ACTIVE",
+          source: "direct",
+        },
+      });
     }
 
     if (!templateId && !htmlContent) {

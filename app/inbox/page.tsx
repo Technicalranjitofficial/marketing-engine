@@ -14,6 +14,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Mail,
+  PenSquare,
+  Send,
+  X,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
@@ -77,6 +80,15 @@ export default function InboxPage() {
   const [selected, setSelected] = useState<EmailFull | null>(null);
   const [loadingEmail, setLoadingEmail] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  // Compose state
+  const [showCompose, setShowCompose] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [composeForm, setComposeForm] = useState({
+    to: "",
+    subject: "",
+    body: "",
+  });
 
   // ── Fetch list ────────────────────────────────────────────────────────────
 
@@ -167,6 +179,60 @@ export default function InboxPage() {
     setSearch(searchInput);
   };
 
+  // ── Send composed email ───────────────────────────────────────────────────
+
+  const handleSendCompose = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!composeForm.to || !composeForm.subject || !composeForm.body) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    setSending(true);
+    try {
+      // Create a simple HTML email from the body text
+      const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:20px;background:#f5f5f5;font-family:Arial,sans-serif;">
+  <div style="max-width:600px;margin:0 auto;background:#ffffff;padding:32px;border-radius:8px;">
+    <div style="white-space:pre-wrap;color:#333;font-size:15px;line-height:1.6;">${composeForm.body.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+    <hr style="border:none;border-top:1px solid #eee;margin:24px 0;">
+    <p style="color:#888;font-size:12px;">Sent from MarketEngine</p>
+  </div>
+</body>
+</html>`;
+
+      const res = await fetch("/api/send-direct", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contactId: null,
+          toEmail: composeForm.to,
+          subject: composeForm.subject,
+          htmlContent,
+          fromEmail: "support@kiitconnect.com",
+          fromName: "KIIT Connect",
+        }),
+      });
+
+      if (res.ok) {
+        toast.success(`Email sent to ${composeForm.to}`);
+        setShowCompose(false);
+        setComposeForm({ to: "", subject: "", body: "" });
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "Failed to send email");
+      }
+    } catch {
+      toast.error("Network error");
+    } finally {
+      setSending(false);
+    }
+  };
+
   // ── Pagination ────────────────────────────────────────────────────────────
 
   const goPage = (pg: number) => {
@@ -192,6 +258,14 @@ export default function InboxPage() {
             )}
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="default"
+              size="sm"
+              leftIcon={<PenSquare className="h-3.5 w-3.5" />}
+              onClick={() => setShowCompose(true)}
+            >
+              Compose
+            </Button>
             <form onSubmit={handleSearch} className="flex items-center gap-2">
               <div className="relative">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[hsl(var(--muted-foreground))]" />
@@ -379,17 +453,18 @@ export default function InboxPage() {
                 </div>
 
                 {/* Email body */}
-                <div className="flex-1 overflow-hidden bg-white dark:bg-[hsl(var(--card))]">
+                <div className="flex-1 overflow-auto bg-white">
                   {selected.htmlBody ? (
                     <iframe
                       ref={iframeRef}
-                      srcDoc={selected.htmlBody}
+                      srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;padding:16px;background:#fff;color:#222;font-family:Arial,sans-serif;}</style></head><body>${selected.htmlBody}</body></html>`}
                       sandbox="allow-same-origin"
-                      className="w-full h-full border-0"
+                      className="w-full h-full border-0 min-h-[400px]"
+                      style={{ background: "#fff" }}
                       title="Email content"
                     />
                   ) : (
-                    <div className="p-6 text-sm text-[hsl(var(--foreground))] whitespace-pre-wrap font-mono leading-relaxed">
+                    <div className="p-6 text-sm text-gray-800 whitespace-pre-wrap font-mono leading-relaxed bg-white min-h-[400px]">
                       {selected.textBody || "(empty email)"}
                     </div>
                   )}
@@ -404,6 +479,92 @@ export default function InboxPage() {
           </div>
         </div>
       </main>
+
+      {/* Compose Modal */}
+      {showCompose && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
+          <div className="w-full max-w-2xl rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[hsl(var(--border))] px-5 py-4">
+              <div className="flex items-center gap-2">
+                <PenSquare className="h-5 w-5 text-[hsl(var(--primary))]" />
+                <h2 className="font-semibold">New Message</h2>
+              </div>
+              <button
+                onClick={() => setShowCompose(false)}
+                className="rounded-lg p-1.5 hover:bg-[hsl(var(--accent))]"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSendCompose} className="p-5 space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-[hsl(var(--muted-foreground))] mb-1.5">
+                  To *
+                </label>
+                <input
+                  type="email"
+                  value={composeForm.to}
+                  onChange={(e) => setComposeForm((f) => ({ ...f, to: e.target.value }))}
+                  placeholder="recipient@example.com"
+                  className="w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--input))] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[hsl(var(--primary))]"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-[hsl(var(--muted-foreground))] mb-1.5">
+                  Subject *
+                </label>
+                <input
+                  type="text"
+                  value={composeForm.subject}
+                  onChange={(e) => setComposeForm((f) => ({ ...f, subject: e.target.value }))}
+                  placeholder="Email subject"
+                  className="w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--input))] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[hsl(var(--primary))]"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-[hsl(var(--muted-foreground))] mb-1.5">
+                  Message *
+                </label>
+                <textarea
+                  value={composeForm.body}
+                  onChange={(e) => setComposeForm((f) => ({ ...f, body: e.target.value }))}
+                  placeholder="Write your message..."
+                  rows={10}
+                  className="w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--input))] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[hsl(var(--primary))] resize-none"
+                  required
+                />
+              </div>
+
+              <div className="flex items-center justify-between pt-2">
+                <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                  Sending from support@kiitconnect.com
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowCompose(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    isLoading={sending}
+                    leftIcon={<Send className="h-4 w-4" />}
+                  >
+                    Send
+                  </Button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
