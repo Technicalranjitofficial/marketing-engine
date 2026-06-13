@@ -138,7 +138,7 @@ export default function AnalyticsPage() {
                       </div>
                       <span className="text-sm tabular-nums">{clickRate}%</span>
                     </div>
-                    <ProgressBar value={clickRate} color="purple" size="md" />
+                    <ProgressBar value={clickRate} color="blue" size="md" />
                   </div>
                 </CardContent>
               </Card>
