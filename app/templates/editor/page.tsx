@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea, Select } from "@/components/ui/Input";
@@ -672,8 +672,11 @@ function generateEmailHtml(blocks: Block[], templateName: string): string {
 // ============================================
 // MAIN EDITOR PAGE
 // ============================================
-export default function TemplateEditorPage() {
+function TemplateEditor() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("id");
+  
   const [blocks, setBlocks] = useState<Block[]>([
     { id: genId(), type: "logo", content: "", src: "", styles: { ...DEFAULT_STYLES.logo, textAlign: "center" } },
     { id: genId(), type: "header", content: "Welcome to KIITConnect", styles: DEFAULT_STYLES.header },
@@ -696,6 +699,41 @@ export default function TemplateEditorPage() {
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
   const [history, setHistory] = useState<Block[][]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [loading, setLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Load existing template when editing
+  useEffect(() => {
+    if (editId) {
+      setLoading(true);
+      setIsEditing(true);
+      fetch(`/api/templates/custom/${editId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.name) {
+            setTemplateName(data.name);
+          }
+          // Parse blocks from mjmlContent (JSON string)
+          if (data.mjmlContent) {
+            try {
+              const parsedBlocks = typeof data.mjmlContent === "string" 
+                ? JSON.parse(data.mjmlContent) 
+                : data.mjmlContent;
+              if (Array.isArray(parsedBlocks) && parsedBlocks.length > 0) {
+                setBlocks(parsedBlocks);
+              }
+            } catch (e) {
+              console.error("Failed to parse blocks:", e);
+            }
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load template:", err);
+          toast.error("Failed to load template");
+        })
+        .finally(() => setLoading(false));
+    }
+  }, [editId]);
 
   const selectedBlock = blocks.find((b) => b.id === selectedId) || null;
 
@@ -812,8 +850,13 @@ export default function TemplateEditorPage() {
     setSaving(true);
     try {
       const html = generateEmailHtml(blocks, templateName);
-      const res = await fetch("/api/templates/custom", {
-        method: "POST",
+      const url = isEditing && editId 
+        ? `/api/templates/custom/${editId}` 
+        : "/api/templates/custom";
+      const method = isEditing && editId ? "PUT" : "POST";
+      
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: templateName,
@@ -822,7 +865,7 @@ export default function TemplateEditorPage() {
         }),
       });
       if (res.ok) {
-        toast.success("Template saved!");
+        toast.success(isEditing ? "Template updated!" : "Template saved!");
         router.push("/templates");
       } else {
         const data = await res.json();
@@ -890,6 +933,20 @@ export default function TemplateEditorPage() {
   const generatedHtml = generateEmailHtml(blocks, templateName);
   const categories = [...new Set(BLOCK_TYPES.map(b => b.category))];
 
+  if (loading) {
+    return (
+      <div className="flex min-h-screen bg-[hsl(var(--background))]">
+        <Sidebar />
+        <main className="flex-1 flex items-center justify-center pl-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400 mx-auto mb-4"></div>
+            <p className="text-slate-400">Loading template...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen bg-[hsl(var(--background))]">
       <Sidebar />
@@ -950,7 +1007,7 @@ export default function TemplateEditorPage() {
           </Button>
           <Button size="sm" onClick={handleSave} isLoading={saving}>
             <Save className="h-4 w-4 sm:mr-1" />
-            <span className="hidden sm:inline">Save</span>
+            <span className="hidden sm:inline">{isEditing ? "Update" : "Save"}</span>
           </Button>
         </header>
 
@@ -1435,5 +1492,14 @@ export default function TemplateEditorPage() {
         </div>
       )}
     </div>
+  );
+}
+
+// Wrapper with Suspense for useSearchParams
+export default function TemplateEditorPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-[hsl(var(--background))]">Loading editor...</div>}>
+      <TemplateEditor />
+    </Suspense>
   );
 }

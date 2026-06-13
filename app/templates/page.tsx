@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input, Select } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Table";
-import { X, Eye, Copy, Mail, Check, ChevronRight, PlusCircle } from "lucide-react";
+import { X, Eye, Copy, Mail, Check, ChevronRight, PlusCircle, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 
@@ -26,6 +26,16 @@ interface Contact {
   lastName: string | null;
 }
 
+interface CustomTemplate {
+  id: string;
+  name: string;
+  description: string | null;
+  thumbnail: string | null;
+  htmlContent?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 const CATEGORY_COLORS: Record<string, "default" | "info" | "success" | "warning"> = {
   Onboarding: "info",
   Marketing: "success",
@@ -38,6 +48,7 @@ const CATEGORY_COLORS: Record<string, "default" | "info" | "success" | "warning"
 
 export default function TemplatesPage() {
   const [templates, setTemplates] = useState<Template[]>([]);
+  const [customTemplates, setCustomTemplates] = useState<CustomTemplate[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [previewId, setPreviewId] = useState<string | null>(null);
@@ -46,6 +57,9 @@ export default function TemplatesPage() {
   const [showSend, setShowSend] = useState<Template | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [customPreviewId, setCustomPreviewId] = useState<string | null>(null);
+  const [customPreviewHtml, setCustomPreviewHtml] = useState("");
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   const [sendForm, setSendForm] = useState({
     contactId: "",
@@ -61,9 +75,11 @@ export default function TemplatesPage() {
     Promise.all([
       fetch("/api/templates").then(r => r.json()),
       fetch("/api/contacts?limit=200").then(r => r.json()),
-    ]).then(([td, cd]) => {
+      fetch("/api/templates/custom").then(r => r.json()),
+    ]).then(([td, cd, customTd]) => {
       setTemplates(td.templates || []);
       setContacts(cd.contacts || []);
+      setCustomTemplates(Array.isArray(customTd) ? customTd : []);
       setLoading(false);
     });
   }, []);
@@ -132,6 +148,38 @@ export default function TemplatesPage() {
     }
   };
 
+  // Preview a custom template
+  const previewCustomTemplate = async (id: string) => {
+    setCustomPreviewId(id);
+    setPreviewLoading(true);
+    try {
+      const res = await fetch(`/api/templates/custom/${id}`);
+      const data = await res.json();
+      setCustomPreviewHtml(data.htmlContent || "<p>No HTML content</p>");
+    } catch {
+      setCustomPreviewHtml("<p>Failed to load preview</p>");
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  // Delete a custom template
+  const deleteCustomTemplate = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this template?")) return;
+    setDeleting(id);
+    try {
+      const res = await fetch(`/api/templates/custom/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setCustomTemplates(prev => prev.filter(t => t.id !== id));
+        toast.success("Template deleted");
+      } else {
+        toast.error("Failed to delete template");
+      }
+    } finally {
+      setDeleting(null);
+    }
+  };
+
   const categories = [...new Set(templates.map(t => t.category))];
 
   return (
@@ -186,10 +234,91 @@ export default function TemplatesPage() {
                   </div>
                 </div>
               ))}
+
+              {/* Custom Templates Section */}
+              {customTemplates.length > 0 && (
+                <div className="mb-10">
+                  <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-[hsl(var(--muted-foreground))]">
+                    <span className="h-px flex-1 bg-[hsl(var(--border))]"></span>
+                    Your Custom Templates
+                    <span className="h-px flex-1 bg-[hsl(var(--border))]"></span>
+                  </h2>
+                  <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {customTemplates.map(t => (
+                      <div key={t.id} className="group relative rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] overflow-hidden hover:border-[hsl(var(--primary)/0.5)] transition-all hover:shadow-lg hover:shadow-[hsl(var(--primary)/0.05)]">
+                        {/* Thumbnail */}
+                        <div className="flex h-32 items-center justify-center bg-gradient-to-br from-purple-500/20 to-[hsl(var(--card))] border-b border-[hsl(var(--border))]">
+                          <span className="text-6xl">{t.thumbnail || "🎨"}</span>
+                        </div>
+                        {/* Info */}
+                        <div className="p-4">
+                          <div className="mb-1 flex items-start justify-between gap-2">
+                            <h3 className="font-semibold text-sm text-[hsl(var(--foreground))]">{t.name}</h3>
+                            <Badge variant="info">Custom</Badge>
+                          </div>
+                          <p className="text-xs text-[hsl(var(--muted-foreground))] leading-relaxed mb-1">
+                            {t.description || "Custom email template"}
+                          </p>
+                          <p className="text-[10px] text-[hsl(var(--muted-foreground))] mb-4">
+                            Updated {new Date(t.updatedAt).toLocaleDateString()}
+                          </p>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline" leftIcon={<Eye className="h-3.5 w-3.5" />} onClick={() => previewCustomTemplate(t.id)} className="flex-1">View</Button>
+                            <Link href={`/templates/editor?id=${t.id}`}>
+                              <Button size="sm" variant="ghost" title="Edit">
+                                <Edit className="h-3.5 w-3.5" />
+                              </Button>
+                            </Link>
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              onClick={() => deleteCustomTemplate(t.id)}
+                              disabled={deleting === t.id}
+                              title="Delete"
+                              className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>
       </main>
+
+      {/* Custom Template Preview Modal */}
+      {customPreviewId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
+          <div className="w-full max-w-2xl h-[85vh] rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between border-b border-[hsl(var(--border))] p-4 flex-shrink-0">
+              <h2 className="font-semibold">{customTemplates.find(t => t.id === customPreviewId)?.name} — Preview</h2>
+              <div className="flex gap-2">
+                <Link href={`/templates/editor?id=${customPreviewId}`}>
+                  <Button size="sm" variant="outline" leftIcon={<Edit className="h-3.5 w-3.5" />}>Edit</Button>
+                </Link>
+                <button onClick={() => { setCustomPreviewId(null); setCustomPreviewHtml(""); }} className="rounded-lg p-1.5 hover:bg-[hsl(var(--accent))]"><X className="h-4 w-4" /></button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-hidden rounded-b-xl">
+              {previewLoading ? (
+                <div className="flex h-full items-center justify-center text-[hsl(var(--muted-foreground))]">Loading preview…</div>
+              ) : (
+                <iframe
+                  srcDoc={customPreviewHtml}
+                  className="w-full h-full bg-white rounded-b-xl"
+                  sandbox="allow-same-origin"
+                  title="Custom Template Preview"
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Preview Modal */}
       {previewId && (
