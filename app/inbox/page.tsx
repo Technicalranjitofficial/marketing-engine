@@ -109,35 +109,63 @@ export default function InboxPage() {
   useEffect(() => { fetchInbox(); }, [page, search]);
   
   // ── SSE for real-time updates ─────────────────────────────────────────────
+  const lastIdRef = useRef<string>("");
+  const lastCountRef = useRef<number>(0);
+  
+  // Update refs when data changes
   useEffect(() => {
-    const params = new URLSearchParams();
-    if (data?.emails?.[0]?.id) params.set("lastId", data.emails[0].id);
-    if (data?.total) params.set("lastCount", data.total.toString());
+    if (data?.emails?.[0]?.id) lastIdRef.current = data.emails[0].id;
+    if (data?.total) lastCountRef.current = data.total;
+  }, [data]);
+  
+  useEffect(() => {
+    let eventSource: EventSource | null = null;
+    let reconnectTimeout: NodeJS.Timeout | null = null;
+    let closed = false;
     
-    const eventSource = new EventSource(`/api/inbox/stream?${params}`);
-    
-    eventSource.addEventListener("new-email", (e) => {
-      const { email } = JSON.parse(e.data);
-      toast.success(`New email from ${email.fromName || email.fromEmail}`, {
-        description: email.subject,
-        icon: <Mail className="h-4 w-4" />,
-        duration: 5000,
+    const connect = () => {
+      if (closed) return;
+      
+      const params = new URLSearchParams();
+      if (lastIdRef.current) params.set("lastId", lastIdRef.current);
+      if (lastCountRef.current) params.set("lastCount", lastCountRef.current.toString());
+      
+      eventSource = new EventSource(`/api/inbox/stream?${params}`);
+      
+      eventSource.addEventListener("new-email", (e) => {
+        const { email } = JSON.parse(e.data);
+        toast.success(`New email from ${email.fromName || email.fromEmail}`, {
+          description: email.subject,
+          icon: <Mail className="h-4 w-4" />,
+          duration: 5000,
+        });
+        // Refresh the list to show the new email
+        fetchInbox(page, search, true);
       });
-      // Refresh the list to show the new email
-      fetchInbox(page, search, true);
-    });
-    
-    eventSource.addEventListener("update", () => {
-      // Counts changed, refresh silently
-      fetchInbox(page, search, true);
-    });
-    
-    eventSource.onerror = () => {
-      // Reconnect handled automatically by EventSource
+      
+      eventSource.addEventListener("update", () => {
+        // Counts changed, refresh silently
+        fetchInbox(page, search, true);
+      });
+      
+      eventSource.onerror = () => {
+        // Close and reconnect after delay
+        eventSource?.close();
+        if (!closed) {
+          reconnectTimeout = setTimeout(connect, 3000);
+        }
+      };
     };
     
-    return () => eventSource.close();
-  }, [data?.emails, data?.total, page, search, fetchInbox]);
+    // Start connection
+    connect();
+    
+    return () => {
+      closed = true;
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
+      eventSource?.close();
+    };
+  }, [page, search, fetchInbox]);
 
   // ── Open email ────────────────────────────────────────────────────────────
 

@@ -15,16 +15,31 @@ export async function GET(req: NextRequest) {
 
   const encoder = new TextEncoder();
   let closed = false;
+  let pingInterval: NodeJS.Timeout | null = null;
 
   const stream = new ReadableStream({
     async start(controller) {
       const send = (event: string, data: unknown) => {
         if (closed) return;
-        controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+        try {
+          controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+        } catch {
+          closed = true;
+        }
       };
 
       // Send initial connection event
       send("connected", { status: "ok", timestamp: Date.now() });
+
+      // Send ping every 15 seconds to keep connection alive (Cloudflare timeout is 100s)
+      pingInterval = setInterval(() => {
+        if (closed) return;
+        try {
+          controller.enqueue(encoder.encode(`: ping\n\n`));
+        } catch {
+          closed = true;
+        }
+      }, 15000);
 
       // Polling loop
       const poll = async () => {
@@ -82,20 +97,23 @@ export async function GET(req: NextRequest) {
       // Handle client disconnect
       req.signal.addEventListener("abort", () => {
         closed = true;
-        controller.close();
+        if (pingInterval) clearInterval(pingInterval);
+        try { controller.close(); } catch { /* already closed */ }
       });
     },
     cancel() {
       closed = true;
+      if (pingInterval) clearInterval(pingInterval);
     },
   });
 
   return new Response(stream, {
     headers: {
       "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache, no-transform",
-      Connection: "keep-alive",
-      "X-Accel-Buffering": "no",
+      "Cache-Control": "no-cache, no-store, must-revalidate, no-transform",
+      "Connection": "keep-alive",
+      "X-Accel-Buffering": "no", // Disable nginx buffering
+      "Access-Control-Allow-Origin": "*",
     },
   });
 }
