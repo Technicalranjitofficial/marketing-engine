@@ -6,8 +6,9 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input, Select } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Table";
-import { X, Eye, Copy, Mail, Check, ChevronRight } from "lucide-react";
+import { X, Eye, Copy, Mail, Check, ChevronRight, PlusCircle } from "lucide-react";
 import { toast } from "sonner";
+import Link from "next/link";
 
 interface Template {
   id: string;
@@ -138,7 +139,14 @@ export default function TemplatesPage() {
       <Sidebar />
       <main className="flex-1 pl-64">
         <div className="container-wide py-8">
-          <Header title="Email Templates" description="8 beautiful, ready-to-send email templates" />
+          <div className="flex items-center justify-between mb-2">
+            <Header title="Email Templates" description="8 beautiful, ready-to-send email templates" />
+            <Link href="/templates/editor">
+              <Button leftIcon={<PlusCircle className="h-4 w-4" />}>
+                Create Custom
+              </Button>
+            </Link>
+          </div>
 
           {loading ? (
             <div className="flex items-center justify-center py-24 text-[hsl(var(--muted-foreground))]">Loading templates…</div>
