@@ -7,7 +7,7 @@ COPY package*.json ./
 COPY prisma ./prisma/
 
 # Install dependencies
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 RUN npm install tsx
 
 # Generate Prisma client
