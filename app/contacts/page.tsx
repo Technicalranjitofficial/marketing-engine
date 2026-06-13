@@ -265,7 +265,7 @@ export default function ContactsPage() {
                         <TableHead className="text-right">Engagement</TableHead>
                         <TableHead className="text-right">Emails</TableHead>
                         <TableHead className="text-right">Added</TableHead>
-                        <TableHead></TableHead>
+                        <TableHead> </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

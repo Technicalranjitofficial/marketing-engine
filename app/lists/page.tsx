@@ -151,7 +151,7 @@ export default function ListsPage() {
                       <TableHead className="text-right">Contacts</TableHead>
                       <TableHead className="text-right">Campaigns</TableHead>
                       <TableHead className="text-right">Created</TableHead>
-                      <TableHead></TableHead>
+                      <TableHead> </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
