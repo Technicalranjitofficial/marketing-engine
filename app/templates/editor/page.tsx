@@ -356,15 +356,16 @@ function PropertiesPanel({
           <Select
             value={block.styles.fontSize || "16px"}
             onChange={(e) => updateStyle("fontSize", e.target.value)}
-          >
-            <option value="12px">12px - Small</option>
-            <option value="14px">14px - Body</option>
-            <option value="16px">16px - Normal</option>
-            <option value="18px">18px - Large</option>
-            <option value="24px">24px - Heading</option>
-            <option value="28px">28px - Title</option>
-            <option value="36px">36px - Hero</option>
-          </Select>
+            options={[
+              { value: "12px", label: "12px - Small" },
+              { value: "14px", label: "14px - Body" },
+              { value: "16px", label: "16px - Normal" },
+              { value: "18px", label: "18px - Large" },
+              { value: "24px", label: "24px - Heading" },
+              { value: "28px", label: "28px - Title" },
+              { value: "36px", label: "36px - Hero" },
+            ]}
+          />
         </div>
       )}
 
@@ -444,13 +445,14 @@ function PropertiesPanel({
           <Select
             value={block.styles.height || "32px"}
             onChange={(e) => updateStyle("height", e.target.value)}
-          >
-            <option value="16px">16px - Small</option>
-            <option value="24px">24px - Medium</option>
-            <option value="32px">32px - Normal</option>
-            <option value="48px">48px - Large</option>
-            <option value="64px">64px - Extra Large</option>
-          </Select>
+            options={[
+              { value: "16px", label: "16px - Small" },
+              { value: "24px", label: "24px - Medium" },
+              { value: "32px", label: "32px - Normal" },
+              { value: "48px", label: "48px - Large" },
+              { value: "64px", label: "64px - Extra Large" },
+            ]}
+          />
         </div>
       )}
 
