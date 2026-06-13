@@ -543,6 +543,180 @@ export const launchTemplate: EmailTemplate = {
 `),
 };
 
+// ─── Template 9: New Auth / Verification (mobile-safe dark) ──
+// Uses ONLY solid hex colors on every <td> via bgcolor attribute.
+// No rgba() on structural cells — this is the most reliable approach
+// for Gmail Android which ignores CSS but respects HTML attributes.
+
+export const newAuthTemplate: EmailTemplate = {
+  id: "new-auth",
+  name: "Auth / Verification (Dark-Safe)",
+  description: "Bulletproof dark-mode auth email — works on Gmail Android, iOS Mail, Outlook",
+  category: "Transactional",
+  previewText: "Action required on your KIIT Connect account.",
+  thumbnail: "🔏",
+  html: (v = {}) => `<!DOCTYPE html>
+<html lang="en" xmlns:v="urn:schemas-microsoft-com:vml">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="color-scheme" content="dark"/>
+<meta name="supported-color-schemes" content="dark"/>
+<title>KIIT Connect</title>
+<style>
+  :root { color-scheme: dark; }
+  body, .body-wrap {
+    margin: 0 !important; padding: 0 !important;
+    background-color: #050A15 !important;
+  }
+  u + .body-wrap { background-color: #050A15 !important; }
+  u + .body-wrap td.outer { background-color: #050A15 !important; }
+  u + .body-wrap td.inner { background-color: #0B1120 !important; }
+  u + .body-wrap td.cell  { background-color: #0B1120 !important; }
+  u + .body-wrap td.foot  { background-color: #050A15 !important; }
+  #MessageViewBody, #MessageWebViewDiv { background-color: #050A15 !important; }
+  @media only screen and (max-width:600px) {
+    .container { width: 100% !important; }
+  }
+</style>
+</head>
+<body class="body-wrap" bgcolor="#050A15" style="margin:0;padding:0;background-color:#050A15;">
+<!-- Gmail Android ignores body bgcolor — wrap everything in a div -->
+<div style="background-color:#050A15;margin:0;padding:0;">
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+<tr>
+  <td class="outer" bgcolor="#050A15" align="center" style="background-color:#050A15;padding:40px 16px;">
+
+    <!-- Outer container -->
+    <table role="presentation" class="container" width="560" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;width:100%;">
+
+      <!-- Top accent bar -->
+      <tr>
+        <td bgcolor="#050A15" style="background-color:#050A15;padding-bottom:0;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td bgcolor="#06D6FF" width="33%" height="3" style="background-color:#06D6FF;height:3px;font-size:0;line-height:0;">&nbsp;</td>
+              <td bgcolor="#9333EA" width="34%" height="3" style="background-color:#9333EA;height:3px;font-size:0;line-height:0;">&nbsp;</td>
+              <td bgcolor="#06D6FF" width="33%" height="3" style="background-color:#06D6FF;height:3px;font-size:0;line-height:0;">&nbsp;</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+
+      <!-- Logo header -->
+      <tr>
+        <td class="inner" bgcolor="#0B1120" align="center" style="background-color:#0B1120;padding:28px 30px 0;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td bgcolor="#0D1E2E" width="32" height="32" align="center" valign="middle" style="background-color:#0D1E2E;width:32px;height:32px;border-radius:8px;border:1px solid #1A4060;">
+                <span style="color:#06D6FF;font-size:13px;font-weight:900;letter-spacing:-0.5px;font-family:Arial,sans-serif;">KC</span>
+              </td>
+              <td bgcolor="#0B1120" style="background-color:#0B1120;padding-left:10px;">
+                <span style="color:#06D6FF;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;font-family:Arial,sans-serif;">KIIT CONNECT</span>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+
+      <!-- Icon + heading -->
+      <tr>
+        <td class="inner" bgcolor="#0B1120" align="center" style="background-color:#0B1120;padding:32px 30px 8px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td bgcolor="#0D1E2E" width="64" height="64" align="center" valign="middle" style="background-color:#0D1E2E;width:64px;height:64px;border-radius:16px;border:1px solid #1A3A55;font-size:30px;">
+                ${v.icon || "🔏"}
+              </td>
+            </tr>
+          </table>
+          <br/>
+          <div style="color:#C8DCF0;font-size:22px;font-weight:800;font-family:Arial,sans-serif;margin-top:16px;">${v.headline || "Account Notification"}</div>
+          <div style="color:#5B8FA8;font-size:13px;font-family:Arial,sans-serif;margin-top:6px;">KIIT Connect Security</div>
+        </td>
+      </tr>
+
+      <!-- Body text -->
+      <tr>
+        <td class="cell" bgcolor="#0B1120" style="background-color:#0B1120;padding:24px 30px 8px;">
+          <p style="margin:0;color:#A8C8E0;font-size:15px;line-height:1.7;font-family:Arial,sans-serif;">
+            Hi <strong style="color:#C8DCF0;">${v.firstName || "there"}</strong>,
+          </p>
+          <p style="margin:12px 0 0;color:#A8C8E0;font-size:15px;line-height:1.7;font-family:Arial,sans-serif;">
+            ${v.message || "A security action was requested on your KIIT Connect account."}
+          </p>
+        </td>
+      </tr>
+
+      <!-- Code / OTP box -->
+      <tr>
+        <td class="cell" bgcolor="#0B1120" style="background-color:#0B1120;padding:20px 30px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td bgcolor="#0D1E2E" align="center" style="background-color:#0D1E2E;padding:24px;border-radius:12px;border:1px solid #1A4060;">
+                <div style="color:#5B8FA8;font-size:11px;text-transform:uppercase;letter-spacing:2px;font-family:Arial,sans-serif;margin-bottom:10px;">Your Verification Code</div>
+                <div style="color:#06D6FF;font-size:38px;font-weight:900;letter-spacing:10px;font-family:'Courier New',Courier,monospace;">${v.otpCode || "------"}</div>
+                <div style="color:#3A5A70;font-size:12px;font-family:Arial,sans-serif;margin-top:10px;">Expires in 10 minutes · Do not share</div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+
+      <!-- Warning box -->
+      <tr>
+        <td class="cell" bgcolor="#0B1120" style="background-color:#0B1120;padding:0 30px 24px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td bgcolor="#1A1200" style="background-color:#1A1200;padding:14px 16px;border-radius:8px;border-left:3px solid #F59E0B;border:1px solid #2A1E00;">
+                <p style="margin:0;color:#C8A850;font-size:13px;line-height:1.6;font-family:Arial,sans-serif;">⚠️ If you did not request this, ignore this email. Your account is safe.</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+
+      <!-- CTA button -->
+      <tr>
+        <td class="cell" bgcolor="#0B1120" align="center" style="background-color:#0B1120;padding:0 30px 32px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td bgcolor="#06D6FF" align="center" style="background-color:#06D6FF;border-radius:8px;">
+                <a href="${v.ctaUrl || "https://kiitconnect.com"}" style="display:inline-block;padding:14px 32px;color:#050A15;font-size:14px;font-weight:800;text-decoration:none;letter-spacing:0.5px;font-family:Arial,sans-serif;">${v.ctaText || "Go to KIIT Connect →"}</a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+
+      <!-- Footer -->
+      <tr>
+        <td class="foot" bgcolor="#050A15" align="center" style="background-color:#050A15;padding:24px 30px;border-top:1px solid #0D1E2E;">
+          <p style="margin:0 0 6px;color:#3A5A70;font-size:12px;font-family:Arial,sans-serif;">The #1 student platform for KIIT University</p>
+          <p style="margin:0 0 12px;font-family:Arial,sans-serif;">
+            <a href="https://kiitconnect.com/academic" style="color:#3A5A70;font-size:11px;text-decoration:none;">Academic</a>&nbsp;·&nbsp;
+            <a href="https://kiitconnect.com/calculator" style="color:#3A5A70;font-size:11px;text-decoration:none;">SGPA</a>&nbsp;·&nbsp;
+            <a href="https://kiitconnect.com/ai/chatbot" style="color:#3A5A70;font-size:11px;text-decoration:none;">AI Chatbot</a>
+          </p>
+          <p style="margin:0;color:#2A3A4A;font-size:11px;font-family:Arial,sans-serif;">
+            You're receiving this because you're part of KIIT Connect.&nbsp;
+            <a href="{{unsubscribeUrl}}" style="color:#06D6FF;text-decoration:underline;opacity:0.5;">Unsubscribe</a>
+          </p>
+        </td>
+      </tr>
+
+    </table>
+    <!-- /Outer container -->
+
+  </td>
+</tr>
+</table>
+
+</div>
+</body>
+</html>`,
+};
+
 // ─── Exports ──────────────────────────────────────────────────
 
 export const ALL_TEMPLATES: EmailTemplate[] = [
@@ -554,6 +728,7 @@ export const ALL_TEMPLATES: EmailTemplate[] = [
   eventTemplate,
   transactionalTemplate,
   launchTemplate,
+  newAuthTemplate,
 ];
 
 export function getTemplateById(id: string): EmailTemplate | undefined {
