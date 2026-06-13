@@ -109,8 +109,7 @@ export async function getQueueStats() {
 export async function isRedisConnected(): Promise<boolean> {
   try {
     const queue = getCampaignQueue();
-    const client = await queue.client;
-    await client.ping();
+    await queue.getWaitingCount();
     return true;
   } catch {
     return false;
