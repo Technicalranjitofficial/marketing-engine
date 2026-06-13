@@ -1,0 +1,592 @@
+// Prisma Schema for Marketing Engine
+// Optimized for high-volume email operations
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// CONTACTS & LISTS
+// ============================================
+
+model Contact {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  firstName     String?
+  lastName      String?
+  phone         String?
+  company       String?
+  customFields  Json?     @default("{}")
+  
+  // Subscription status
+  status        ContactStatus @default(ACTIVE)
+  subscribedAt  DateTime  @default(now())
+  unsubscribedAt DateTime?
+  bounceCount   Int       @default(0)
+  lastBounceAt  DateTime?
+  
+  // Engagement metrics
+  emailsSent    Int       @default(0)
+  emailsOpened  Int       @default(0)
+  emailsClicked Int       @default(0)
+  lastEmailAt   DateTime?
+  lastOpenAt    DateTime?
+  lastClickAt   DateTime?
+  engagementScore Float   @default(0)
+  
+  // Tracking
+  source        String?
+  ipAddress     String?
+  userAgent     String?
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  lists         ContactListMember[]
+  events        EmailEvent[]
+  automationRuns AutomationRun[]
+  
+  @@index([email])
+  @@index([status])
+  @@index([engagementScore])
+  @@index([createdAt])
+}
+
+enum ContactStatus {
+  ACTIVE
+  UNSUBSCRIBED
+  BOUNCED
+  COMPLAINED
+  CLEANED
+}
+
+model ContactList {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  type        ListType @default(STATIC)
+  
+  // Dynamic list filters (JSON query)
+  filters     Json?
+  
+  // Stats
+  memberCount Int      @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  members     ContactListMember[]
+  campaigns   Campaign[]
+  automations Automation[]
+  
+  @@index([name])
+}
+
+enum ListType {
+  STATIC
+  DYNAMIC
+}
+
+model ContactListMember {
+  id          String      @id @default(cuid())
+  contactId   String
+  listId      String
+  addedAt     DateTime    @default(now())
+  
+  contact     Contact     @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  list        ContactList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  
+  @@unique([contactId, listId])
+  @@index([listId])
+}
+
+// ============================================
+// CAMPAIGNS & EMAILS
+// ============================================
+
+model Campaign {
+  id            String         @id @default(cuid())
+  name          String
+  subject       String
+  previewText   String?
+  
+  // Content
+  htmlContent   String         @db.Text
+  textContent   String?        @db.Text
+  templateId    String?
+  
+  // Sender info
+  fromName      String
+  fromEmail     String
+  replyTo       String?
+  
+  // Targeting
+  listId        String?
+  segmentQuery  Json?
+  
+  // A/B Testing
+  isABTest      Boolean        @default(false)
+  abTestId      String?
+  
+  // Scheduling
+  status        CampaignStatus @default(DRAFT)
+  scheduledAt   DateTime?
+  sentAt        DateTime?
+  completedAt   DateTime?
+  
+  // Stats
+  totalRecipients Int          @default(0)
+  totalSent       Int          @default(0)
+  totalDelivered  Int          @default(0)
+  totalOpened     Int          @default(0)
+  totalClicked    Int          @default(0)
+  totalBounced    Int          @default(0)
+  totalComplaints Int          @default(0)
+  totalUnsubscribed Int        @default(0)
+  
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  // Relations
+  list          ContactList?   @relation(fields: [listId], references: [id])
+  template      EmailTemplate? @relation(fields: [templateId], references: [id])
+  abTest        ABTest?        @relation(fields: [abTestId], references: [id])
+  emails        Email[]
+  events        EmailEvent[]
+  
+  @@index([status])
+  @@index([scheduledAt])
+  @@index([createdAt])
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  SENT
+  PAUSED
+  CANCELLED
+}
+
+model Email {
+  id          String      @id @default(cuid())
+  campaignId  String
+  contactId   String
+  
+  // Tracking
+  messageId   String?     @unique
+  status      EmailStatus @default(QUEUED)
+  
+  // Timestamps
+  queuedAt    DateTime    @default(now())
+  sentAt      DateTime?
+  deliveredAt DateTime?
+  openedAt    DateTime?
+  clickedAt   DateTime?
+  bouncedAt   DateTime?
+  
+  // Error tracking
+  errorMessage String?
+  retryCount   Int        @default(0)
+  
+  campaign    Campaign    @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  events      EmailEvent[]
+  
+  @@index([campaignId])
+  @@index([status])
+  @@index([messageId])
+}
+
+enum EmailStatus {
+  QUEUED
+  SENDING
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  COMPLAINED
+  FAILED
+}
+
+model EmailEvent {
+  id          String    @id @default(cuid())
+  emailId     String
+  campaignId  String
+  contactId   String?
+  
+  type        EventType
+  metadata    Json?
+  
+  // Tracking info
+  ipAddress   String?
+  userAgent   String?
+  linkUrl     String?
+  
+  createdAt   DateTime  @default(now())
+  
+  email       Email     @relation(fields: [emailId], references: [id], onDelete: Cascade)
+  campaign    Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  contact     Contact?  @relation(fields: [contactId], references: [id])
+  
+  @@index([emailId])
+  @@index([campaignId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+enum EventType {
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  COMPLAINED
+  UNSUBSCRIBED
+}
+
+// ============================================
+// TEMPLATES
+// ============================================
+
+model EmailTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  category    String?
+  
+  // Content (MJML or HTML)
+  mjmlContent String?  @db.Text
+  htmlContent String   @db.Text
+  textContent String?  @db.Text
+  
+  // Preview
+  thumbnail   String?
+  
+  // Metadata
+  isPublic    Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  campaigns   Campaign[]
+  
+  @@index([name])
+  @@index([category])
+}
+
+// ============================================
+// A/B TESTING
+// ============================================
+
+model ABTest {
+  id              String       @id @default(cuid())
+  name            String
+  
+  // Test configuration
+  testType        ABTestType   @default(SUBJECT)
+  winnerCriteria  WinnerCriteria @default(OPEN_RATE)
+  testPercentage  Int          @default(20)
+  testDuration    Int          @default(4) // hours
+  
+  // Status
+  status          ABTestStatus @default(DRAFT)
+  startedAt       DateTime?
+  endedAt         DateTime?
+  
+  // Winner
+  winnerId        String?
+  
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  
+  // Relations
+  variants        Campaign[]
+  
+  @@index([status])
+}
+
+enum ABTestType {
+  SUBJECT
+  CONTENT
+  FROM_NAME
+  SEND_TIME
+}
+
+enum WinnerCriteria {
+  OPEN_RATE
+  CLICK_RATE
+  CONVERSION_RATE
+}
+
+enum ABTestStatus {
+  DRAFT
+  RUNNING
+  COMPLETED
+  CANCELLED
+}
+
+// ============================================
+// AUTOMATION
+// ============================================
+
+model Automation {
+  id          String           @id @default(cuid())
+  name        String
+  description String?
+  
+  // Trigger
+  triggerType AutomationTrigger
+  triggerConfig Json?
+  
+  // Target list
+  listId      String?
+  
+  // Status
+  status      AutomationStatus @default(DRAFT)
+  
+  // Stats
+  totalEntered  Int            @default(0)
+  totalCompleted Int           @default(0)
+  totalActive   Int            @default(0)
+  
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  
+  // Relations
+  list        ContactList?     @relation(fields: [listId], references: [id])
+  steps       AutomationStep[]
+  runs        AutomationRun[]
+  
+  @@index([status])
+}
+
+enum AutomationTrigger {
+  SIGNUP
+  TAG_ADDED
+  DATE_FIELD
+  CUSTOM_EVENT
+  CAMPAIGN_OPENED
+  CAMPAIGN_CLICKED
+  LINK_CLICKED
+}
+
+enum AutomationStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+model AutomationStep {
+  id            String       @id @default(cuid())
+  automationId  String
+  
+  // Step config
+  stepType      StepType
+  stepOrder     Int
+  config        Json
+  
+  // Delay before this step
+  delayValue    Int          @default(0)
+  delayUnit     DelayUnit    @default(HOURS)
+  
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  
+  automation    Automation   @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  
+  @@index([automationId])
+  @@index([stepOrder])
+}
+
+enum StepType {
+  SEND_EMAIL
+  WAIT
+  CONDITION
+  UPDATE_CONTACT
+  ADD_TAG
+  REMOVE_TAG
+  ADD_TO_LIST
+  REMOVE_FROM_LIST
+  WEBHOOK
+  END
+}
+
+enum DelayUnit {
+  MINUTES
+  HOURS
+  DAYS
+  WEEKS
+}
+
+model AutomationRun {
+  id            String     @id @default(cuid())
+  automationId  String
+  contactId     String
+  
+  // Progress
+  currentStep   Int        @default(0)
+  status        RunStatus  @default(ACTIVE)
+  
+  // Timing
+  startedAt     DateTime   @default(now())
+  nextStepAt    DateTime?
+  completedAt   DateTime?
+  
+  automation    Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  contact       Contact    @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  
+  @@unique([automationId, contactId])
+  @@index([automationId])
+  @@index([status])
+  @@index([nextStepAt])
+}
+
+enum RunStatus {
+  ACTIVE
+  WAITING
+  COMPLETED
+  CANCELLED
+  ERROR
+}
+
+// ============================================
+// LANDING PAGES
+// ============================================
+
+model LandingPage {
+  id            String         @id @default(cuid())
+  name          String
+  slug          String         @unique
+  
+  // Content
+  htmlContent   String         @db.Text
+  cssContent    String?        @db.Text
+  
+  // Settings
+  title         String?
+  description   String?
+  favicon       String?
+  customDomain  String?
+  
+  // Form settings
+  listId        String?
+  redirectUrl   String?
+  successMessage String?
+  
+  // Status
+  status        PageStatus     @default(DRAFT)
+  publishedAt   DateTime?
+  
+  // Stats
+  totalViews    Int            @default(0)
+  totalSignups  Int            @default(0)
+  
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  @@index([slug])
+  @@index([status])
+}
+
+enum PageStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+// ============================================
+// SETTINGS & CONFIGURATION
+// ============================================
+
+model SmtpConfig {
+  id          String   @id @default(cuid())
+  name        String
+  
+  // SMTP settings
+  host        String
+  port        Int
+  secure      Boolean  @default(true)
+  username    String?
+  password    String?
+  
+  // Rate limiting
+  rateLimit   Int      @default(100) // emails per second
+  dailyLimit  Int      @default(100000)
+  
+  // Status
+  isDefault   Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  
+  // Stats
+  sentToday   Int      @default(0)
+  lastResetAt DateTime @default(now())
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([isDefault])
+  @@index([isActive])
+}
+
+model UnsubscribeToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  email     String
+  used      Boolean  @default(false)
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  
+  @@index([token])
+  @@index([email])
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt
+  
+  @@index([key])
+}
+
+// ============================================
+// JOB QUEUE (for BullMQ persistence)
+// ============================================
+
+model JobLog {
+  id          String    @id @default(cuid())
+  jobId       String
+  queueName   String
+  jobType     String
+  payload     Json
+  status      JobStatus @default(PENDING)
+  result      Json?
+  error       String?
+  attempts    Int       @default(0)
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  
+  @@index([queueName])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum JobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  RETRYING
+}

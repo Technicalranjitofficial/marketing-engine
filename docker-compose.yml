@@ -1,0 +1,101 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: marketing-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: marketing
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-marketing_secret_2024}
+      POSTGRES_DB: marketing_engine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U marketing -d marketing_engine"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - marketing-network
+
+  # Redis for BullMQ
+  redis:
+    image: redis:7-alpine
+    container_name: marketing-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - marketing-network
+
+  # Next.js Frontend + API
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marketing-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://marketing:${POSTGRES_PASSWORD:-marketing_secret_2024}@postgres:5432/marketing_engine?schema=public
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - BASE_URL=${BASE_URL:-http://localhost:3000}
+      - SMTP_HOST=${SMTP_HOST:-mail.kiitconnect.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_SECURE=${SMTP_SECURE:-false}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - DEFAULT_FROM_NAME=${DEFAULT_FROM_NAME:-Marketing Engine}
+      - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL:-noreply@kiitconnect.com}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - marketing-network
+
+  # Background Worker
+  worker:
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    container_name: marketing-worker
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql://marketing:${POSTGRES_PASSWORD:-marketing_secret_2024}@postgres:5432/marketing_engine?schema=public
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - BASE_URL=${BASE_URL:-http://localhost:3000}
+      - SMTP_HOST=${SMTP_HOST:-mail.kiitconnect.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_SECURE=${SMTP_SECURE:-false}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - SMTP_RATE_LIMIT=${SMTP_RATE_LIMIT:-50}
+      - SMTP_DAILY_LIMIT=${SMTP_DAILY_LIMIT:-100000}
+      - DEFAULT_FROM_NAME=${DEFAULT_FROM_NAME:-Marketing Engine}
+      - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL:-noreply@kiitconnect.com}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - marketing-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  marketing-network:
+    driver: bridge
