@@ -41,16 +41,16 @@ export default function DashboardPage() {
           </div>
 
           <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard title="Total Contacts" value={loading ? "—" : (stats.overview.contacts.total).toLocaleString()} subtitle={`${(stats?.overview.contacts.active ?? 0).toLocaleString()} active`} icon={Users} iconColor="text-blue-400" />
-            <StatCard title="Campaigns Sent" value={loading ? "—" : (stats.overview.campaigns.sent).toString()} subtitle={`${stats?.overview.campaigns.total ?? 0} total`} icon={Mail} iconColor="text-emerald-400" />
-            <StatCard title="Avg. Open Rate" value={loading ? "—" : `${openRate}%`} icon={MailOpen} iconColor="text-purple-400" />
+            <StatCard title="Total Contacts" value={!stats ? "—" : (stats.overview.contacts.total).toLocaleString()} subtitle={`${(stats?.overview.contacts.active ?? 0).toLocaleString()} active`} icon={Users} iconColor="text-blue-400" />
+            <StatCard title="Campaigns Sent" value={!stats ? "—" : (stats.overview.campaigns.sent).toString()} subtitle={`${stats?.overview.campaigns.total ?? 0} total`} icon={Mail} iconColor="text-emerald-400" />
+            <StatCard title="Avg. Open Rate" value={!stats ? "—" : `${openRate}%`} icon={MailOpen} iconColor="text-purple-400" />
             <StatCard title="Active Automations" value={"0"} subtitle="0 total" icon={Zap} iconColor="text-amber-400" />
           </div>
 
           <div className="mb-8 grid gap-6 lg:grid-cols-3">
-            <MetricCard label="Emails Sent" value={loading ? "—" : (stats.emailStats.totalSent).toLocaleString()} color="blue" />
-            <MetricCard label="Emails Opened" value={loading ? "—" : (stats.emailStats.totalOpened).toLocaleString()} percentage={`${openRate}%`} color="green" />
-            <MetricCard label="Links Clicked" value={loading ? "—" : (stats.emailStats.totalClicked).toLocaleString()} percentage={`${clickRate}%`} color="purple" />
+            <MetricCard label="Emails Sent" value={!stats ? "—" : (stats.emailStats.totalSent).toLocaleString()} color="blue" />
+            <MetricCard label="Emails Opened" value={!stats ? "—" : (stats.emailStats.totalOpened).toLocaleString()} percentage={`${openRate}%`} color="green" />
+            <MetricCard label="Links Clicked" value={!stats ? "—" : (stats.emailStats.totalClicked).toLocaleString()} percentage={`${clickRate}%`} color="purple" />
           </div>
 
           <div className="grid gap-6 lg:grid-cols-3">
@@ -60,7 +60,7 @@ export default function DashboardPage() {
                 <Link href="/campaigns"><Button variant="ghost" size="sm" rightIcon={<ArrowRight className="h-4 w-4" />}>View All</Button></Link>
               </CardHeader>
               <CardContent className="p-0">
-                {loading ? (
+                {!stats ? (
                   <div className="flex items-center justify-center py-12 text-[hsl(var(--muted-foreground))]">Loading…</div>
                 ) : !stats.recentCampaigns?.length ? (
                   <div className="flex flex-col items-center justify-center py-12 text-[hsl(var(--muted-foreground))]">
