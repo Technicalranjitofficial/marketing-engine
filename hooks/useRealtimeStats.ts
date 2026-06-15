@@ -39,50 +39,38 @@ export interface StreamStats {
   inboxUnread: number;
 }
 
-type ConnectionState = "connecting" | "live" | "reconnecting" | "error";
-
 export function useRealtimeStats() {
   const [data, setData] = useState<StreamStats | null>(null);
-  const [state, setState] = useState<ConnectionState>("connecting");
+  const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
-  const esRef = useRef<EventSource | null>(null);
-  const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const retryCount = useRef(0);
+  const abortRef = useRef<AbortController | null>(null);
 
-  const connect = useCallback(() => {
-    if (esRef.current) esRef.current.close();
+  const refresh = useCallback(async () => {
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
 
-    setState(retryCount.current > 0 ? "reconnecting" : "connecting");
-    const es = new EventSource("/api/stream");
-    esRef.current = es;
-
-    es.onmessage = (e) => {
-      try {
-        setData(JSON.parse(e.data));
-        setLastUpdate(new Date());
-        setState("live");
-        retryCount.current = 0;
-      } catch { /* ignore bad frames */ }
-    };
-
-    es.onerror = () => {
-      es.close();
-      esRef.current = null;
-      setState(retryCount.current >= 3 ? "error" : "reconnecting");
-      // Exponential backoff: 2s, 4s, 8s, then cap at 15s
-      const delay = Math.min(2000 * Math.pow(2, retryCount.current), 15000);
-      retryCount.current++;
-      retryRef.current = setTimeout(connect, delay);
-    };
+    setLoading(true);
+    try {
+      const res = await fetch("/api/stream", { signal: controller.signal });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json: StreamStats = await res.json();
+      setData(json);
+      setLastUpdate(new Date());
+    } catch (err) {
+      if ((err as Error).name !== "AbortError") {
+        console.error("[useRealtimeStats] fetch error:", err);
+      }
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    connect();
-    return () => {
-      esRef.current?.close();
-      if (retryRef.current) clearTimeout(retryRef.current);
-    };
-  }, [connect]);
+    refresh();
+    return () => { abortRef.current?.abort(); };
+  }, [refresh]);
 
-  return { data, state, lastUpdate };
+  return { data, loading, lastUpdate, refresh };
 }
+

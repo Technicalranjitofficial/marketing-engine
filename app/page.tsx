@@ -11,9 +11,8 @@ import { Users, Mail, Zap, Plus, ArrowRight, MailOpen, MousePointerClick, Activi
 import Link from "next/link";
 
 export default function DashboardPage() {
-  const { data: stats, state, lastUpdate } = useRealtimeStats();
+  const { data: stats, loading, lastUpdate, refresh } = useRealtimeStats();
 
-  const loading = !stats;
   const openRate = stats?.emailStats.openRate ?? "0";
   const clickRate = stats?.emailStats.clickRate ?? "0";
   const bounceRate = stats?.emailStats.bounceRate ?? "0";
@@ -32,7 +31,7 @@ export default function DashboardPage() {
                   {stats.activeEmailJobs} sending
                 </div>
               ) : null}
-              <LiveBadge state={state} lastUpdate={lastUpdate} />
+              <LiveBadge loading={loading} lastUpdate={lastUpdate} onRefresh={refresh} />
             </div>
           </div>
 

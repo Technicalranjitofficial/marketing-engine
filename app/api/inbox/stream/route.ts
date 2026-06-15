@@ -1,6 +1,6 @@
 // GET /api/inbox/stream?lastId=xxx
 // Server-Sent Events stream for real-time inbox updates
-// Polls DB every 2 seconds and pushes new emails to the client
+// Polls DB every 10 seconds and pushes new emails to the client
 
 import { NextRequest } from "next/server";
 import prisma from "@/lib/db";
@@ -87,7 +87,7 @@ export async function GET(req: NextRequest) {
 
         // Schedule next poll
         if (!closed) {
-          setTimeout(poll, 2000);
+          setTimeout(poll, 10000);
         }
       };
 
