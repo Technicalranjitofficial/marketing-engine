@@ -19,8 +19,7 @@ function StatBlock({ label, value, sub, color }: { label: string; value: string;
 }
 
 export default function AnalyticsPage() {
-  const { data, state, lastUpdate } = useRealtimeStats();
-  const loading = !data;
+  const { data, loading, lastUpdate, refresh } = useRealtimeStats();
 
   const e = data?.emailStats;
   const openRate = parseFloat(e?.openRate ?? "0");
@@ -35,7 +34,7 @@ export default function AnalyticsPage() {
         <div className="container-wide py-8">
           <div className="flex items-start justify-between">
             <Header title="Analytics" description="Detailed performance metrics for your email campaigns" />
-            <div className="mt-2"><LiveBadge state={state} lastUpdate={lastUpdate} /></div>
+            <div className="mt-2"><LiveBadge loading={loading} lastUpdate={lastUpdate} onRefresh={refresh} /></div>
           </div>
 
           {loading ? (
