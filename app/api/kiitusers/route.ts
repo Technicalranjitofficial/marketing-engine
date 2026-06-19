@@ -31,7 +31,7 @@ function normalise(u: Record<string, unknown>) {
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const group  = (searchParams.get("group") || "all") as keyof typeof GROUPS;
-  const limit  = Math.min(100, parseInt(searchParams.get("limit") || "50"));
+  const limit  = Math.min(500, parseInt(searchParams.get("limit") || "50"));
   const page   = Math.max(1,   parseInt(searchParams.get("page")  || "1"));
   const search = searchParams.get("search")?.toLowerCase().trim() || "";
   const batch  = searchParams.get("batch") || ""; // e.g. "21", "22", "23", "24", "25"

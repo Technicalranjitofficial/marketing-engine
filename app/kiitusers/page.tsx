@@ -74,6 +74,7 @@ export default function KIITUsersPage() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch]         = useState("");
   const [selected, setSelected]     = useState<Set<string>>(new Set());
+  const [pageSize, setPageSize]       = useState(50);
 
   // Send modal state
   const [showModal, setShowModal]   = useState(false);
@@ -91,10 +92,10 @@ export default function KIITUsersPage() {
 
   // ── Fetch users ─────────────────────────────────────────────────────────────
 
-  const fetchUsers = useCallback(async (pg = page, g = group, q = search, b = batch) => {
+  const fetchUsers = useCallback(async (pg = page, g = group, q = search, b = batch, size = pageSize) => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ group: g, page: pg.toString(), limit: "50" });
+      const params = new URLSearchParams({ group: g, page: pg.toString(), limit: size.toString() });
       if (q) params.set("search", q);
       if (b) params.set("batch", b);
       const res = await fetch(`/api/kiitusers?${params}`);
@@ -104,6 +105,7 @@ export default function KIITUsersPage() {
     finally { setLoading(false); }
   }, [page, group, search, batch]);
 
+  useEffect(() => { fetchUsers(1, group, search, batch, pageSize); }, [pageSize]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
   // ── Fetch templates for modal ─────────────────────────────────────────────
@@ -428,9 +430,20 @@ export default function KIITUsersPage() {
               {/* Pagination */}
               {data && data.pages > 1 && (
                 <div className="flex items-center justify-between border-t border-[hsl(var(--border))] px-4 py-3">
-                  <span className="text-xs text-[hsl(var(--muted-foreground))]">
-                    Page {page} of {data.pages} · {data.total.toLocaleString()} users
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-[hsl(var(--muted-foreground))]">
+                      Page {page} of {data.pages} · {data.total.toLocaleString()} users
+                    </span>
+                    <select
+                      value={pageSize}
+                      onChange={(e) => { setPage(1); setPageSize(Number(e.target.value)); }}
+                      className="h-7 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--accent)/0.5)] px-2 text-xs outline-none focus:ring-1 focus:ring-[hsl(var(--primary))]"
+                    >
+                      {[25, 50, 100, 250, 500].map(n => (
+                        <option key={n} value={n}>{n} / page</option>
+                      ))}
+                    </select>
+                  </div>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="sm" onClick={() => goPage(page - 1)} disabled={page <= 1}>
                       <ChevronLeft className="h-4 w-4" />
