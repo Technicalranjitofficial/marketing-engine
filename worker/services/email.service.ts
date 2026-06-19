@@ -3,6 +3,7 @@ import type { Transporter } from "nodemailer";
 import Handlebars from "handlebars";
 import mjml2html from "mjml";
 import { htmlToText } from "html-to-text";
+import juice from "juice";
 
 // ============================================
 // EMAIL SERVICE
@@ -109,11 +110,19 @@ class EmailService {
 
     const baseUrl = process.env.BASE_URL || "http://localhost:3000";
 
+    // Inline <style> block CSS → keeps dark backgrounds intact after Gmail strips <head> CSS
+    const inlinedHtml = juice(payload.html, {
+      preserveMediaQueries: true,
+      preserveImportant: true,
+      removeStyleTags: false, // keep <style> for clients that support it (Apple Mail etc.)
+      applyAttributesTableElements: true,
+    });
+
     // Add tracking pixel
     const trackingPixel = `<img src="${baseUrl}/api/track/open/${payload.trackingId}" width="1" height="1" style="display:none;width:1px;height:1px;" alt="" />`;
-    const htmlWithTracking = payload.html.includes("</body>")
-      ? payload.html.replace("</body>", `${trackingPixel}</body>`)
-      : payload.html + trackingPixel;
+    const htmlWithTracking = inlinedHtml.includes("</body>")
+      ? inlinedHtml.replace("</body>", `${trackingPixel}</body>`)
+      : inlinedHtml + trackingPixel;
 
     // Add link tracking
     const htmlWithLinks = this.addLinkTracking(htmlWithTracking, payload.trackingId, baseUrl);

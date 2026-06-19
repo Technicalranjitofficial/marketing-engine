@@ -172,7 +172,11 @@ async function handleProcessBatch(data: ProcessBatchJob) {
     const trackingId = nanoid(16);
 
     // Compile template with contact data
+    // Top-level keys match {{variable}} syntax used in custom templates
     const templateData = {
+      firstName: contact.firstName || "",
+      lastName: contact.lastName || "",
+      email: contact.email,
       contact: {
         email: contact.email,
         firstName: contact.firstName || "",
