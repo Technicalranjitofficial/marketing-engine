@@ -107,6 +107,7 @@ export default function CampaignDetailPage() {
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
   const [showPreview, setShowPreview] = useState(false);
   const [sending, setSending] = useState(false);
+  const [pageSize, setPageSize] = useState(50);
 
   // Fetch campaign details
   const fetchCampaign = useCallback(async () => {
@@ -128,10 +129,10 @@ export default function CampaignDetailPage() {
   }, [id, router]);
 
   // Fetch emails
-  const fetchEmails = useCallback(async (pg = page, status = statusFilter, search = searchQuery) => {
+  const fetchEmails = useCallback(async (pg = page, status = statusFilter, search = searchQuery, size = pageSize) => {
     setLoadingEmails(true);
     try {
-      const params = new URLSearchParams({ page: pg.toString(), limit: "50" });
+      const params = new URLSearchParams({ page: pg.toString(), limit: size.toString() });
       if (status) params.set("status", status);
       if (search) params.set("search", search);
       
@@ -151,6 +152,7 @@ export default function CampaignDetailPage() {
   }, [id, page, statusFilter, searchQuery]);
 
   useEffect(() => { fetchCampaign(); }, [fetchCampaign]);
+  useEffect(() => { fetchEmails(1, statusFilter, searchQuery, pageSize); }, [pageSize]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { fetchEmails(); }, [fetchEmails]);
 
   const handleSend = async () => {
@@ -467,6 +469,17 @@ export default function CampaignDetailPage() {
                       </button>
                     ))}
                   </div>
+
+                  {/* Per-page selector */}
+                  <select
+                    value={pageSize}
+                    onChange={(e) => { setPage(1); setPageSize(Number(e.target.value)); }}
+                    className="h-8 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--accent)/0.5)] px-2 text-xs outline-none focus:ring-1 focus:ring-[hsl(var(--primary))]"
+                  >
+                    {[25, 50, 100, 250, 500].map(n => (
+                      <option key={n} value={n}>{n} / page</option>
+                    ))}
+                  </select>
 
                   {/* Search */}
                   <form onSubmit={handleSearch} className="flex items-center gap-2">
