@@ -60,6 +60,8 @@ services:
       - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL:-noreply@kiitconnect.com}
       - KIIT_API_URL=${KIIT_API_URL:-http://172.22.0.1:4006}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-kiitconnect@admin2024}
+      - NEXT_TELEMETRY_DISABLED=1
+      - NEXT_DEPLOYMENT_ID=local
     depends_on:
       postgres:
         condition: service_healthy

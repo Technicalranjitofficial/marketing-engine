@@ -61,7 +61,7 @@ export async function queueCampaign(campaignId: string) {
   return queue.add(
     "send-campaign",
     { type: "send-campaign", campaignId },
-    { jobId: `campaign-${campaignId}` }
+    { jobId: `campaign-${campaignId}`, removeOnComplete: { count: 50 }, removeOnFail: { count: 100 } }
   );
 }
 
@@ -83,7 +83,7 @@ export async function queueDirectEmail(payload: DirectEmailPayload) {
   return queue.add(
     "send-email",
     { type: "send-email", ...payload },
-    { jobId: `direct-${payload.emailId}`, attempts: 3, backoff: { type: "exponential", delay: 5000 } }
+    { jobId: `direct-${payload.emailId}`, attempts: 3, backoff: { type: "exponential", delay: 5000 }, removeOnComplete: { count: 100 }, removeOnFail: { count: 200 } }
   );
 }
 
@@ -92,7 +92,7 @@ export async function queueAutomationTrigger(automationId: string, contactId: st
   return queue.add(
     "automation-trigger",
     { type: "automation-trigger", automationId, contactId },
-    { jobId: `trigger-${automationId}-${contactId}` }
+    { jobId: `trigger-${automationId}-${contactId}`, removeOnComplete: { count: 50 }, removeOnFail: { count: 100 } }
   );
 }
 
@@ -105,7 +105,7 @@ export async function queueTrackingEvent(
   return queue.add(
     "track-event",
     { type: "track-event", eventType, trackingId, metadata },
-    { jobId: `analytics-${trackingId}-${eventType}-${Date.now()}` }
+    { jobId: `analytics-${trackingId}-${eventType}-${Date.now()}`, removeOnComplete: { count: 500 }, removeOnFail: { count: 200 } }
   );
 }
 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { nanoid } from "nanoid";
 import prisma from "@/lib/db";
 import { renderTemplate, getTemplateById } from "@/lib/templates";
 import { queueDirectEmail } from "@/lib/queue";
@@ -97,99 +98,85 @@ export async function POST(req: NextRequest) {
 
     let queued = 0;
     const errors: string[] = [];
+    const baseUrl = process.env.BASE_URL || "http://localhost:3000";
 
-    for (const user of users) {
-      try {
-        const firstName = (user.name || "").split(/[\s_]+/)[0].replace(/^\d+/, "").trim() || "Student";
-        const email     = user.email?.toLowerCase().trim();
-        // Strict RFC-5321 local-part: only alphanum, dots, hyphens, underscores, plus — no commas
-        const validEmail = /^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$/.test(email ?? "");
-        if (!email || !validEmail) { errors.push(`bad email: ${user.email}`); continue; }
+    // Process in parallel batches of 25 to avoid blocking the event loop
+    const BATCH_SIZE = 25;
+    for (let i = 0; i < users.length; i += BATCH_SIZE) {
+      const batch = users.slice(i, i + BATCH_SIZE);
+      await Promise.all(batch.map(async (user) => {
+        try {
+          const firstName = (user.name || "").split(/[\s_]+/)[0].replace(/^\d+/, "").trim() || "Student";
+          const email     = user.email?.toLowerCase().trim();
+          const validEmail = /^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$/.test(email ?? "");
+          if (!email || !validEmail) { errors.push(`bad email: ${user.email}`); return; }
 
-        // Upsert contact so tracking + unsubscribe work
-        const contact = await prisma.contact.upsert({
-          where : { email },
-          update: { firstName, updatedAt: new Date() },
-          create: {
-            email,
-            firstName,
-            lastName : user.name.split(/[\s_]+/).slice(1).join(" ") || null,
-            status   : "ACTIVE",
-            source   : "kiitconnect",
-          },
-        });
-
-        if (contact.status !== "ACTIVE") {
-          errors.push(`${email}: status=${contact.status}, skipped`);
-          continue;
-        }
-
-        // Create Email record FIRST — we need the ID for trackingId + unsubscribeUrl
-        // Let Prisma generate the ID via @default(cuid()), then derive trackingId from it
-        const emailRecord = await prisma.email.create({
-          data: {
-            campaignId : campaign.id,
-            contactId  : contact.id,
-            status     : "QUEUED",
-          },
-        });
-
-        const trackingId     = `${emailRecord.id}-${Date.now()}`;
-        const baseUrl        = process.env.BASE_URL || "http://localhost:3000";
-        const unsubscribeUrl = `${baseUrl}/api/unsubscribe/${trackingId}`;
-
-        // Render template with per-user vars (unsubscribeUrl is now real)
-        const vars: Record<string, string> = {
-          ...templateVars,
-          firstName,
-          name         : user.name,
-          email,
-          unsubscribeUrl,
-        };
-        
-        // Use hardcoded template or custom template
-        let rendered: string;
-        if (isHardcodedTemplate) {
-          rendered = renderTemplate(templateId, vars);
-        } else {
-          // Replace variables in custom template HTML
-          rendered = customTemplateHtml!;
-          for (const [key, value] of Object.entries(vars)) {
-            rendered = rendered.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
-          }
-        }
-
-        // Store trackingId on the email record
-        await prisma.email.update({
-          where: { id: emailRecord.id },
-          data : { trackingId },
-        });
-
-        // Update campaign htmlContent on first iteration (for preview)
-        if (queued === 0) {
-          await prisma.campaign.update({
-            where: { id: campaign.id },
-            data : { htmlContent: rendered },
+          const contact = await prisma.contact.upsert({
+            where : { email },
+            update: { firstName, updatedAt: new Date() },
+            create: {
+              email,
+              firstName,
+              lastName : user.name.split(/[\s_]+/).slice(1).join(" ") || null,
+              status   : "ACTIVE",
+              source   : "kiitconnect",
+            },
           });
+
+          if (contact.status !== "ACTIVE") {
+            errors.push(`${email}: status=${contact.status}, skipped`);
+            return;
+          }
+
+          // Generate trackingId before DB insert — eliminates the extra update call
+          const trackingId     = nanoid();
+          const unsubscribeUrl = `${baseUrl}/api/unsubscribe/${trackingId}`;
+
+          const emailRecord = await prisma.email.create({
+            data: {
+              campaignId : campaign.id,
+              contactId  : contact.id,
+              status     : "QUEUED",
+              trackingId,
+            },
+          });
+
+          const vars: Record<string, string> = {
+            ...templateVars,
+            firstName,
+            name         : user.name,
+            email,
+            unsubscribeUrl,
+          };
+
+          let rendered: string;
+          if (isHardcodedTemplate) {
+            rendered = renderTemplate(templateId, vars);
+          } else {
+            rendered = customTemplateHtml!;
+            for (const [key, value] of Object.entries(vars)) {
+              rendered = rendered.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
+            }
+          }
+
+          await queueDirectEmail({
+            emailId     : emailRecord.id,
+            campaignId  : campaign.id,
+            contactId   : contact.id,
+            to          : email,
+            subject,
+            html        : rendered,
+            fromName,
+            fromEmail,
+            replyTo     : replyTo || fromEmail,
+            trackingId,
+          });
+
+          queued++;
+        } catch (e) {
+          errors.push(`${user.email}: ${(e as Error).message}`);
         }
-
-        await queueDirectEmail({
-          emailId     : emailRecord.id,
-          campaignId  : campaign.id,
-          contactId   : contact.id,
-          to          : email,
-          subject,
-          html        : rendered,
-          fromName,
-          fromEmail,
-          replyTo     : replyTo || fromEmail,
-          trackingId,
-        });
-
-        queued++;
-      } catch (e) {
-        errors.push(`${user.email}: ${(e as Error).message}`);
-      }
+      }));
     }
 
     // If no emails were queued, cancel the campaign

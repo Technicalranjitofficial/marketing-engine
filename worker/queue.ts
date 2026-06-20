@@ -146,6 +146,8 @@ export async function addEmailJob(data: SendEmailJob, options?: { priority?: num
     priority: options?.priority ?? 0,
     delay: options?.delay,
     jobId: `email-${data.emailId}`,
+    removeOnComplete: { count: 100 },
+    removeOnFail: { count: 200 },
   });
 }
 
@@ -160,6 +162,8 @@ export async function addCampaignJob(data: CampaignJobData, options?: { priority
     priority: options?.priority ?? 0,
     delay: options?.delay,
     jobId,
+    removeOnComplete: { count: 50 },
+    removeOnFail: { count: 100 },
   });
 }
 
@@ -172,18 +176,24 @@ export async function addAutomationJob(data: AutomationJobData, options?: { prio
     priority: options?.priority ?? 0,
     delay: options?.delay,
     jobId,
+    removeOnComplete: { count: 50 },
+    removeOnFail: { count: 100 },
   });
 }
 
 export async function addAnalyticsJob(data: AnalyticsJobData) {
   return analyticsQueue.add(data.type, data, {
     jobId: `analytics-${data.trackingId}-${data.eventType}-${Date.now()}`,
+    removeOnComplete: { count: 500 },
+    removeOnFail: { count: 200 },
   });
 }
 
 export async function addCleanupJob(data: CleanupJobData) {
   return cleanupQueue.add(data.type, data, {
     jobId: `cleanup-${data.task}-${Date.now()}`,
+    removeOnComplete: { count: 20 },
+    removeOnFail: { count: 20 },
   });
 }
 
