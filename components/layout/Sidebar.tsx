@@ -25,6 +25,7 @@ const navItems = [
   { href: "/",            icon: LayoutDashboard, label: "Dashboard"       },
   { href: "/inbox",       icon: Inbox,           label: "Inbox",   badge: "inbox" as const },
   { href: "/campaigns",   icon: Mail,            label: "Campaigns"       },
+  { href: "/kiit-campaigns",icon: BarChart3,     label: "KIIT Campaigns"  },
   { href: "/contacts",    icon: Users,           label: "Contacts"        },
   { href: "/kiitusers",   icon: GraduationCap,   label: "KIIT Users"      },
   { href: "/lists",       icon: ListTree,        label: "Lists"           },

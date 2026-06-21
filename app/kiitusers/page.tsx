@@ -82,6 +82,7 @@ export default function KIITUsersPage() {
   const [sending, setSending]       = useState(false);
   const [form, setForm]             = useState({
     templateId  : "",
+    campaignName: "",
     subject     : "",
     fromName    : "KIIT Connect",
     fromEmail   : "support@kiitconnect.com",
@@ -167,8 +168,8 @@ export default function KIITUsersPage() {
   // ── Send ────────────────────────────────────────────────────────────────────
 
   const handleSend = async () => {
-    if (!form.templateId || !form.subject) {
-      toast.error("Template and subject are required");
+    if (!form.templateId || !form.subject || !form.campaignName) {
+      toast.error("Template, campaign name, and subject are required");
       return;
     }
     if (selected.size === 0) { toast.error("No users selected"); return; }
@@ -186,11 +187,15 @@ export default function KIITUsersPage() {
 
     setSending(true);
     try {
+      const selectedTemplate = templates.find(t => t.id === form.templateId);
       const res = await fetch("/api/kiitusers/send-bulk", {
         method : "POST",
         headers: { "Content-Type": "application/json" },
         body   : JSON.stringify({
           users      : usersToSend,
+          campaignName: form.campaignName,
+          batch      : batch || "All",
+          templateName: selectedTemplate ? selectedTemplate.name : "Unknown",
           subject    : form.subject,
           templateId : form.templateId,
           templateVars: {
@@ -489,6 +494,17 @@ export default function KIITUsersPage() {
                 </select>
               </div>
 
+              {/* Campaign Name */}
+              <div>
+                <label className="mb-1 block text-xs font-medium text-[hsl(var(--muted-foreground))]">Campaign Name / Topic *</label>
+                <input
+                  value={form.campaignName}
+                  onChange={(e) => setForm((f) => ({ ...f, campaignName: e.target.value }))}
+                  placeholder="e.g. 2024 Event Reminder"
+                  className="w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[hsl(var(--primary))]"
+                />
+              </div>
+
               {/* Subject */}
               <div>
                 <label className="mb-1 block text-xs font-medium text-[hsl(var(--muted-foreground))]">Subject *</label>
@@ -551,7 +567,7 @@ export default function KIITUsersPage() {
               <Button
                 leftIcon={<Send className="h-3.5 w-3.5" />}
                 onClick={handleSend}
-                disabled={sending || !form.templateId || !form.subject}
+                disabled={sending || !form.templateId || !form.subject || !form.campaignName}
               >
                 {sending ? "Queuing…" : `Queue ${selected.size} Email${selected.size > 1 ? "s" : ""}`}
               </Button>

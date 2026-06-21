@@ -48,6 +48,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const {
       users,          // KIITUser[]  — selected users from the UI
+      campaignName,   // string
+      batch,          // string
+      templateName,   // string
       subject,        // string
       templateId,     // string
       templateVars = {},  // Record<string, string>  — shared vars; firstName / name overridden per user
@@ -56,6 +59,9 @@ export async function POST(req: NextRequest) {
       replyTo,
     } = body as {
       users        : KIITUser[];
+      campaignName?: string;
+      batch?       : string;
+      templateName?: string;
       subject      : string;
       templateId   : string;
       templateVars?: Record<string, string>;
@@ -85,7 +91,7 @@ export async function POST(req: NextRequest) {
     // Create a single campaign for the whole batch
     const campaign = await prisma.campaign.create({
       data: {
-        name            : `Bulk: ${subject} → ${users.length} KIITConnect users`,
+        name            : campaignName || `Bulk: ${subject} → ${users.length} KIITConnect users`,
         subject,
         htmlContent     : "",   // placeholder — emails have their own rendered HTML
         fromName,
@@ -93,6 +99,12 @@ export async function POST(req: NextRequest) {
         replyTo         : replyTo || fromEmail,
         status          : "SENDING",
         totalRecipients : users.length,
+        segmentQuery    : {
+          source: "kiitconnect",
+          batch: batch || "All",
+          topic: campaignName || subject,
+          templateName: templateName || "Unknown"
+        }
       },
     });
 
