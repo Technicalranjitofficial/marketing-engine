@@ -42,7 +42,7 @@ export function Sidebar() {
   const [inboxUnread, setInboxUnread] = useState(0);
   const [loggingOut, setLoggingOut] = useState(false);
 
-  // Fetch unread count on mount + every 30 s
+  // Fetch unread count on mount only (refresh button handles manual updates)
   useEffect(() => {
     const load = async () => {
       try {
@@ -54,8 +54,6 @@ export function Sidebar() {
       } catch { /* ignore */ }
     };
     load();
-    const t = setInterval(load, 30_000);
-    return () => clearInterval(t);
   }, []);
 
   const handleLogout = async () => {
